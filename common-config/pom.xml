@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>microservices-demo</artifactId>
+        <groupId>com.microservices.demo</groupId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>common-config</artifactId>
+
+    <!--
+      Note :-  All the modules must include the module = app-config-data
+              The module = common-config includes the module = app-config-data . This is because the module = app-config-data is responsible  to read the
+               various .yml configuration files. So this module needs to be added in all the other modules .
+
+               For example the class = RetryConfig in module = common-config module  relies on the RetryConfigData present in the module = app-config-data
+
+                  @Configuration
+                  public class RetryConfig {
+                  private RetryConfigData retryConfigData;
+      -->
+
+
+    <dependencies>
+        <dependency>
+            <groupId>com.microservices.demo</groupId>
+            <artifactId>app-config-data</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.retry</groupId>
+            <artifactId>spring-retry</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>
