@@ -33,9 +33,28 @@ public class KafkaAdminClient {
 
     private final RetryConfigData retryConfigData;
 
+    /*
+      The  @Configuration  class KafkaAdminConfig , creates  @Bean --> public AdminClient adminClient()
+
+        This  AdminClient is then autowired below ..
+        */
     private final AdminClient adminClient;
 
+
+    // RetryTemplate is configured in common-config module
     private final RetryTemplate retryTemplate;
+
+
+    /*
+     Create a  @Configuration class =  WebClientConfig which is responsible to create WebClient .
+
+       @Bean
+       WebClient webClient() {
+        return WebClient.builder().build();
+       }
+
+        We then autowire WebClientConfig  in KafkaAdminClient
+     */
 
     private final WebClient webClient;
 
@@ -52,6 +71,12 @@ public class KafkaAdminClient {
         this.webClient = webClient;
     }
 
+    /*
+       (1) We configure the RetryTemplate in the common-config module
+       (2) invoke the execute method of RetryTemplate .
+       (3) Pass the doCreateTopics in the argument of the RetryTemplate.
+
+     */
     public void createTopics() {
         CreateTopicsResult createTopicsResult;
         try {
@@ -65,6 +90,7 @@ public class KafkaAdminClient {
     }
 
     public void checkTopicsCreated() {
+        // Fetch the Topic created . We rely on the adminClient.listTopics().listings()
         Collection<TopicListing> topics = getTopics();
         int retryCount = 1;
         Integer maxRetry = retryConfigData.getMaxAttempts();
@@ -72,6 +98,7 @@ public class KafkaAdminClient {
         Long sleepTimeMs = retryConfigData.getSleepTimeMs();
         for (String topic : kafkaConfigData.getTopicNamesToCreate()) {
             while (!isTopicCreated(topics, topic)) {
+                LOG.info("topic is not created yet .. recheck ... " + maxRetry);
                 checkMaxRetry(retryCount++, maxRetry);
                 sleep(sleepTimeMs);
                 sleepTimeMs *= multiplier;
@@ -86,6 +113,7 @@ public class KafkaAdminClient {
         int multiplier = retryConfigData.getMultiplier().intValue();
         Long sleepTimeMs = retryConfigData.getSleepTimeMs();
         while (!getSchemaRegistryStatus().is2xxSuccessful()) {
+            // Check if the retry is exhausted
             checkMaxRetry(retryCount++, maxRetry);
             sleep(sleepTimeMs);
             sleepTimeMs *= multiplier;
@@ -128,6 +156,7 @@ public class KafkaAdminClient {
         if (topics == null) {
             return false;
         }
+       // returns true if the topicName is found
         return topics.stream().anyMatch(topic -> topic.name().equals(topicName));
     }
 
@@ -136,19 +165,28 @@ public class KafkaAdminClient {
         LOG.info("Creating {} topics(s), attempt {}", topicNames.size(), retryContext.getRetryCount());
 
         /*
-          (1) Fetch the Topics to be created from the configuration file.
-          (2) Populate the List of NewTopic from the topics to be created
-          (3) Pass the List of NewTopic, to AdminClient
+          (1) Fetch the Topics [kafkaConfigData] to be created from the configuration file.
+          (2) Construct  the List of NewTopic from the topics to be created
+          (3) Pass the List of NewTopic, to AdminClient.
+          (4) The AdminClient is responsible to create Kafka Topic
+
          */
         List<NewTopic> kafkaTopics = topicNames.stream()
-                                                .map(topic -> new NewTopic(topic.trim(), kafkaConfigData.getNumOfPartitions(), kafkaConfigData.getReplicationFactor()
+                .map(topic -> new NewTopic(topic.trim(), kafkaConfigData.getNumOfPartitions(), kafkaConfigData.getReplicationFactor()
                                                  )).collect(Collectors.toList());
+
+        // Create Topic (List<NewTopic>) using KafkaAdmin
         return adminClient.createTopics(kafkaTopics);
     }
 
+    /*
+      Fetch the topics created
+
+     */
     private Collection<TopicListing> getTopics() {
         Collection<TopicListing> topics;
         try {
+            // Check the topic is created
             topics = retryTemplate.execute(this::doGetTopics);
         } catch (Throwable t) {
             throw new KafkaClientException("Reached max number of retry for reading kafka topic(s)!", t);
@@ -160,6 +198,8 @@ public class KafkaAdminClient {
             throws ExecutionException, InterruptedException {
         LOG.info("Reading kafka topic {}, attempt {}",
                 kafkaConfigData.getTopicNamesToCreate().toArray(), retryContext.getRetryCount());
+
+        // Fetch the topics created from the adminClient
         Collection<TopicListing> topics = adminClient.listTopics().listings().get();
         if (topics != null) {
             topics.forEach(topic -> LOG.debug("Topic with name {}", topic.name()));

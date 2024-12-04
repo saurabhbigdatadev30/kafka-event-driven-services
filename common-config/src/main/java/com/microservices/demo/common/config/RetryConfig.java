@@ -37,11 +37,13 @@ public class RetryConfig {
         exponentialBackOffPolicy.setMaxInterval(retryConfigData.getMaxIntervalMs());
         exponentialBackOffPolicy.setMultiplier(retryConfigData.getMultiplier());
 
+        // Set retryTemplate
         retryTemplate.setBackOffPolicy(exponentialBackOffPolicy);
 
         SimpleRetryPolicy simpleRetryPolicy = new SimpleRetryPolicy();
         simpleRetryPolicy.setMaxAttempts(retryConfigData.getMaxAttempts());
 
+        // Set retryTemplate
         retryTemplate.setRetryPolicy(simpleRetryPolicy);
 
         return retryTemplate;

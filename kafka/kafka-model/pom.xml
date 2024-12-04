@@ -39,6 +39,10 @@
                         <goals>
                             <goal>schema</goal>
                         </goals>
+                        <!--
+                             We place the schema file  .avcs in the resources folder
+                             The mvn clean install command will then generate the Model class in the src/main/java
+                           -->
                         <configuration>
                             <sourceDirectory>${project.basedir}/src/main/resources/avro/</sourceDirectory>
                             <outputDirectory>${project.basedir}/src/main/java/</outputDirectory>
