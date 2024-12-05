@@ -31,7 +31,9 @@ twitter-to-kafka-service:
  enable-v2-tweets: true
  enable-mock-tweets: false
 
- @ConditionalOnProperty annotation allows a Spring Bean to be loaded at runtime, based on a configuration value  is true
+ @ConditionalOnProperty annotation allows a particular Spring Bean to be loaded at runtime, based on a configuration value  if is set to true.
+ This means that when the property  enable-v2-tweets is set as  true & enable-mock-tweets is set as false , in this case
+ the TwitterV2KafkaStreamRunner will be loaded at runtime
 
  */
 @ConditionalOnExpression("${twitter-to-kafka-service.enable-v2-tweets} && not ${twitter-to-kafka-service.enable-mock-tweets}")

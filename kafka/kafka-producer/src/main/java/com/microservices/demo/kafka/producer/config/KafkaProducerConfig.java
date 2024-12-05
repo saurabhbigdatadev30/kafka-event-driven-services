@@ -17,6 +17,7 @@ import java.util.Map;
 @Configuration
 public class KafkaProducerConfig<K extends Serializable, V extends SpecificRecordBase> {
 
+    // Add maven dependency  app-config-data module  in kafka-producer module. This is to read the configurations from KafkaConfigData & KafkaProducerConfigData
     private final KafkaConfigData kafkaConfigData;
 
     private final KafkaProducerConfigData kafkaProducerConfigData;
@@ -28,6 +29,7 @@ public class KafkaProducerConfig<K extends Serializable, V extends SpecificRecor
 
     @Bean
     public Map<String, Object> producerConfig() {
+        // Build the properties of ProducerConfig
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaConfigData.getBootstrapServers());
         props.put(kafkaConfigData.getSchemaRegistryUrlKey(), kafkaConfigData.getSchemaRegistryUrl());

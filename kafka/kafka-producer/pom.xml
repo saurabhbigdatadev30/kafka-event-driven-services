@@ -17,6 +17,10 @@
             <groupId>com.microservices.demo</groupId>
             <artifactId>app-config-data</artifactId>
         </dependency>
+
+        <!--Using the avro schema file with extension as  .avsc , we generate the Avro Model class
+           kafka-model is added as dependency
+           -->
         <dependency>
             <groupId>com.microservices.demo</groupId>
             <artifactId>kafka-model</artifactId>

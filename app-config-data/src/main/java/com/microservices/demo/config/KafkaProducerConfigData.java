@@ -18,3 +18,21 @@ public class KafkaProducerConfigData {
     private Integer requestTimeoutMs;
     private Integer retryCount;
 }
+/*
+In the module aap-config-data , we create a configuration class = KafkaProducerConfigData  to read from  config-client-twitter_to_kafka.yml
+"kafka-producer-config:"
+
+kafka-producer-config:
+  key-serializer-class: org.apache.kafka.common.serialization.LongSerializer
+  value-serializer-class: io.confluent.kafka.serializers.KafkaAvroSerializer
+  compression-type: snappy
+  acks: all
+  batch-size: 16384
+  batch-size-boost-factor: 100
+  linger-ms: 5
+  request-timeout-ms: 60000
+  retry-count: 5
+
+  To increase throughput we can increase the batched data in request. This can be done by increasing the batch size, adding a compression as batching is done
+  after compression, and increase the linger ms to add a delay on producer client to wait more and send more data at once.
+ */
