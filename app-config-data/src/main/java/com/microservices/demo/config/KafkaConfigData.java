@@ -7,7 +7,8 @@ import org.springframework.context.annotation.Configuration;
 import java.util.List;
 /*
 
-The below @Configuration class = KafkaConfigData , Reads the  configuration from the  file  = config-client-reactive_elastic_query.yml
+The below @Configuration class = KafkaConfigData .
+This class reads the  configuration from the  file  = config-client-reactive_elastic_query.yml
 
 kafka-config:
   topic-name: twitter-analytics-topic-2

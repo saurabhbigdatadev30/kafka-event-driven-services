@@ -1,4 +1,7 @@
 version: '3.7'
+
+# run the command docker-compose -f common.yml -f kafka_cluster.yml up -d
+# This will start zookeeper , schema registry , 3 Kafka Brokers
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:${KAFKA_VERSION:-latest}

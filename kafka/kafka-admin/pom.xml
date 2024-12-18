@@ -15,10 +15,10 @@
     <!--
          We create a new module = kafka-admin
          This  kafka-admin module is responsible to create Kafka Topic using the AdminClient class of Apache Kafka Library .
-         Also, will check if the Topics are created and schema server is running prior to running the microservices  . We need to add checks [Programmatic Checks
-         & in Docker compose file]
+         Also, will check if the Topics are created and schema server is running prior to running the microservices  .
+          We need to add checks [Programmatic Checks]  & in Docker compose file]
 
-  [1]   We  create the RetryTemplate and the related configuration in this module, but we also  need this retry logic to reuse in  other modules and services too.
+  [1]   We  create the RetryTemplate and the related configuration in this module, but since we also  need the retry logic to reuse in  other modules and services too.
         So to make this logic reusable ... we  create  a new common module [common-config] , where we define the RetryTemplate & add this as dependency in
         kafka-admin module
 
@@ -29,11 +29,12 @@
     -->
 
     <dependencies>
-        <!-- Read the @Configuration from .yml files  -->
+        <!-- The module = app-config-data , Reads  the @Configuration from .yml files  -->
         <dependency>
             <groupId>com.microservices.demo</groupId>
             <artifactId>app-config-data</artifactId>
         </dependency>
+
 
         <!-- Contains the RetryTemplate Logic to create Topic in common-config module  -->
         <dependency>

@@ -24,20 +24,37 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
+/*
+KafkaAdminClient is utility class defined in kafka-admin module which is responsible to create Topic .
+
+The kafka-admin module [KafkaAdminClient.java]   depends  on the other module classes
+
+(1) KafkaConfigData.java - @Configuration class defined in the app-config-data module which reads the Kafka configurations [prefix = "kafka-config"]  from the
+                           config-client-analytics.yml file
+
+(2) RetryConfigData.java - @Configuration class defined in the app-config-data module which reads the Retry  configurations [prefix = "retry-config"] from the
+                           config-client-kafka_to_elastic.yml file
+
+(3) AdminClient -          We instantiate this Bean in Configuration class KafkaAdminConfig
+
+(4) RetryTemplate -        We instantiate this Bean in Configuration class RetryConfig in common-config module
+
+ */
 @Component
 public class KafkaAdminClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(KafkaAdminClient.class);
 
+    // The KafkaConfigData is a Configuration class that includes from  Module =  app-config-data
     private final KafkaConfigData kafkaConfigData;
 
+    // The RetryConfigData is a Configuration class that includes from  Module =  app-config-data module
     private final RetryConfigData retryConfigData;
 
     /*
-      The  @Configuration  class KafkaAdminConfig , creates  @Bean --> public AdminClient adminClient()
-
-        This  AdminClient is then autowired below ..
-        */
+      The  @Configuration class = KafkaAdminConfig , creates  @Bean --> public AdminClient adminClient().
+      This  AdminClient will then be injected using the CI
+    */
     private final AdminClient adminClient;
 
 
@@ -46,7 +63,7 @@ public class KafkaAdminClient {
 
 
     /*
-     Create a  @Configuration class =  WebClientConfig which is responsible to create WebClient .
+     Create a  @Configuration class =  WebClientConfig which is responsible to create @Bean = WebClient .
 
        @Bean
        WebClient webClient() {
@@ -58,7 +75,7 @@ public class KafkaAdminClient {
 
     private final WebClient webClient;
 
-
+// Constructor injection for setting all the above properties
     public KafkaAdminClient(KafkaConfigData config,
                             RetryConfigData retryConfigData,
                             AdminClient client,
@@ -72,7 +89,7 @@ public class KafkaAdminClient {
     }
 
     /*
-       (1) We configure the RetryTemplate in the common-config module
+       (1) We configure the @Bean = RetryTemplate in the common-config module
        (2) invoke the execute method of RetryTemplate .
        (3) Pass the doCreateTopics in the argument of the RetryTemplate.
 
@@ -89,8 +106,9 @@ public class KafkaAdminClient {
         checkTopicsCreated();
     }
 
+    // Check if the Topic is created with retry option
     public void checkTopicsCreated() {
-        // Fetch the Topic created . We rely on the adminClient.listTopics().listings()
+        // Fetch the Topic created . We rely on the adminClient.listTopics().listings() , to check the topic created
         Collection<TopicListing> topics = getTopics();
         int retryCount = 1;
         Integer maxRetry = retryConfigData.getMaxAttempts();
@@ -98,7 +116,7 @@ public class KafkaAdminClient {
         Long sleepTimeMs = retryConfigData.getSleepTimeMs();
         for (String topic : kafkaConfigData.getTopicNamesToCreate()) {
             while (!isTopicCreated(topics, topic)) {
-                LOG.info("topic is not created yet .. recheck ... " + maxRetry);
+                LOG.info("topic is not created yet .. maxRetry so far {} ...  " , maxRetry);
                 checkMaxRetry(retryCount++, maxRetry);
                 sleep(sleepTimeMs);
                 sleepTimeMs *= multiplier;
@@ -107,6 +125,7 @@ public class KafkaAdminClient {
         }
     }
 
+    // Check if the SchemaRegistry is up with RetryOption
     public void checkSchemaRegistry() {
         int retryCount = 1;
         Integer maxRetry = retryConfigData.getMaxAttempts();
@@ -122,6 +141,7 @@ public class KafkaAdminClient {
 
     private HttpStatusCode getSchemaRegistryStatus() {
         try {
+            // Make a REST call ,
             return webClient
                     .method(HttpMethod.GET)
                     .uri(kafkaConfigData.getSchemaRegistryUrl())
@@ -159,24 +179,29 @@ public class KafkaAdminClient {
        // returns true if the topicName is found
         return topics.stream().anyMatch(topic -> topic.name().equals(topicName));
     }
-
     private CreateTopicsResult doCreateTopics(RetryContext retryContext) {
         List<String> topicNames = kafkaConfigData.getTopicNamesToCreate();
-        LOG.info("Creating {} topics(s), attempt {}", topicNames.size(), retryContext.getRetryCount());
 
+        topicNames.stream().forEach(topicName -> {
+            LOG.info("Topic {} to be created is ", topicName);
+        });
+
+        LOG.info("Creating {} Number of topics(s), The current Retry attempt {}", topicNames.size(), retryContext.getRetryCount());
         /*
-          (1) Fetch the Topics [kafkaConfigData] to be created from the configuration file.
-          (2) Construct  the List of NewTopic from the topics to be created
-          (3) Pass the List of NewTopic, to AdminClient.
+          (1) Fetch the Topics [kafkaConfigData] to be created from the configuration file using kafkaConfigData. List<String> topicNames .
+          (2) From List<String> topicNames , using the streams API , iterate over each topic &  Construct  the List<NewTopic> from the topics to be created
+              List<String> topicNames to List<NewTopic> kafkaTopics
+          (3) Pass the List of NewTopic, to AdminClient.createTopics()
           (4) The AdminClient is responsible to create Kafka Topic
-
+          (5) CreateTopicsResult stores the result of creation
          */
         List<NewTopic> kafkaTopics = topicNames.stream()
-                .map(topic -> new NewTopic(topic.trim(), kafkaConfigData.getNumOfPartitions(), kafkaConfigData.getReplicationFactor()
+                                                .map(topic -> new NewTopic(topic.trim(), kafkaConfigData.getNumOfPartitions(), kafkaConfigData.getReplicationFactor()
                                                  )).collect(Collectors.toList());
 
         // Create Topic (List<NewTopic>) using KafkaAdmin
-        return adminClient.createTopics(kafkaTopics);
+         CreateTopicsResult createTopicResult  = adminClient.createTopics(kafkaTopics);
+         return createTopicResult;
     }
 
     /*
@@ -186,7 +211,7 @@ public class KafkaAdminClient {
     private Collection<TopicListing> getTopics() {
         Collection<TopicListing> topics;
         try {
-            // Check the topic is created
+            // Check the topics created
             topics = retryTemplate.execute(this::doGetTopics);
         } catch (Throwable t) {
             throw new KafkaClientException("Reached max number of retry for reading kafka topic(s)!", t);
@@ -196,13 +221,15 @@ public class KafkaAdminClient {
 
     private Collection<TopicListing> doGetTopics(RetryContext retryContext)
             throws ExecutionException, InterruptedException {
-        LOG.info("Reading kafka topic {}, attempt {}",
-                kafkaConfigData.getTopicNamesToCreate().toArray(), retryContext.getRetryCount());
+        LOG.info("Reading kafka topic {}, The number of attempt {}",
+                   kafkaConfigData.getTopicNamesToCreate().toArray(), retryContext.getRetryCount());
 
-        // Fetch the topics created from the adminClient
+        // Fetch the topics created from the adminClient ..  Collection<TopicListing>
         Collection<TopicListing> topics = adminClient.listTopics().listings().get();
         if (topics != null) {
-            topics.forEach(topic -> LOG.debug("Topic with name {}", topic.name()));
+            topics.forEach(topic -> {
+                LOG.debug("Topic with name {} is created", topic.name());
+            });
         }
         return topics;
     }

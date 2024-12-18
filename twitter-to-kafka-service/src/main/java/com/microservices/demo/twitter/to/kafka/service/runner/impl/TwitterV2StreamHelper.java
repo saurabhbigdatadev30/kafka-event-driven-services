@@ -37,7 +37,20 @@ import java.util.Locale;
 import java.util.Map;
 
 @Component
-// Load the V2 Implementation . ConditionalOnExpression annotation allows  to load a spring bean at runtime using a configuration value.
+
+/*
+
+StreamRunner Interface has 3 different implementations .
+We load the V2 Implementation . ConditionalOnExpression annotation allows  to load a spring bean at runtime using a configuration value.
+
+The application.yml will have the below properties, to load particular implementation at runtime
+
+twitter-to-kafka-service:
+ enable-v2-tweets: true
+ enable-mock-tweets: false
+ */
+
+
 @ConditionalOnExpression("${twitter-to-kafka-service.enable-v2-tweets} && not ${twitter-to-kafka-service.enable-mock-tweets}")
 //@ConditionalOnProperty(name = "twitter-to-kafka-service.enable-v2-tweets", havingValue = "true", matchIfMissing = true)
 public class TwitterV2StreamHelper {
@@ -65,27 +78,34 @@ public class TwitterV2StreamHelper {
 
     /*
      * This method calls the filtered stream endpoint and streams Tweets from it.
+      Using the dependency httpClient
 
           (1) Create a HttpClient object using Builder pattern
-          (2) Create URIBuilder, reading  the baseURL from the Configuration
-          (3) Using the URIBuilder, create HttpGet. Add the Bearer Token in the HttpHeader
-          (4) httpClient.execute(httpGet), sends Http Request to the Twitter V2 Base url
-          (5) Get the Stream of tweets and store this in BufferedReader
+
+          (2) Create URIBuilder object , reading  the baseURL from the Configuration .yml file
+
+          (3) Create HttpGet object , passing the above URIBuilder object as argument
+
+          (4) Add the Bearer Token in the HttpGet header
+
+          (5) httpClient.execute(httpGet), this will send the  Http Request to the Twitter V2 Base url
+
+          (6) Get the Stream of tweets and store this in BufferedReader
         */
     void connectStream(String bearerToken) throws IOException, URISyntaxException, TwitterException, JSONException {
 
-        // [1] Create a HttpClient  object using Builder pattern
+        // [1] Build HttpClient  object using Builder pattern
         HttpClient httpClient = HttpClients.custom()
                                 .setDefaultRequestConfig(RequestConfig.custom()
                                 .setCookieSpec(CookieSpecs.STANDARD).build())
                                 .build();
 
 
-        // [2] Create URIBuilder, reading the BaseURL from the Configuration from .yml
+        // [2] Build URIBuilder, reading the BaseURL from the Configuration from .yml
         URIBuilder uriBuilder = new URIBuilder(twitterToKafkaServiceConfigData.getTwitterV2BaseUrl());
 
 
-        // [3] Using the URIBuilder, create HttpGet Object.
+        // [3] Using the above created URIBuilder object , Build HttpGet Object.
         HttpGet httpGet = new HttpGet(uriBuilder.build());
 
         // [4] Add the Bearer Token in the HttpGet Header for oAuth
@@ -141,18 +161,18 @@ public class TwitterV2StreamHelper {
      * */
     private void createRules(String bearerToken, Map<String, String> rules) throws URISyntaxException, IOException {
 
-        // [1] Build the  HttpClient
+        // [1] Build the  HttpClient Object
         HttpClient httpClient = HttpClients.custom()
                                            .setDefaultRequestConfig(RequestConfig.custom()
                                            .setCookieSpec(CookieSpecs.STANDARD).build())
                                            .build();
 
 
-        // [2] Reads the Base Rule URL from Configuration
+        // [2] Build the  URIBuilder Object, Reading  the Base Rule URL from Configuration
         URIBuilder uriBuilder = new URIBuilder(twitterToKafkaServiceConfigData.getTwitterV2RulesBaseUrl());
 
 
-        // [3] Create a Http Post request [HttpPost] . Set  the Bearer Token in the Header of HttpPost
+        // [3] Build a Http Post request [HttpPost] Object. Set  the Bearer Token in the Header of HttpPost
         HttpPost httpPost = new HttpPost(uriBuilder.build());
         httpPost.setHeader("Authorization", String.format("Bearer %s", bearerToken));
         httpPost.setHeader("content-type", "application/json");
@@ -188,6 +208,7 @@ public class TwitterV2StreamHelper {
         httpGet.setHeader("Authorization", String.format("Bearer %s", bearerToken));
         httpGet.setHeader("content-type", "application/json");
 
+        // Get the rules
         HttpResponse response = httpClient.execute(httpGet);
         HttpEntity entity = response.getEntity();
         if (null != entity) {

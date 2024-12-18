@@ -9,6 +9,7 @@ import org.springframework.retry.annotation.EnableRetry;
 
 import java.util.Map;
 
+// This @Configuration class is responsible to create @Bean = AdminClient, reading the Bootstrap details from KafkaConfigData
 @EnableRetry
 @Configuration
 public class KafkaAdminConfig {

@@ -12,11 +12,13 @@
     <artifactId>common-config</artifactId>
 
     <!--
-      Note :-  All the modules must include the module = app-config-data
-              The module = common-config includes the module = app-config-data . This is because the module = app-config-data is responsible  to read the
-               various .yml configuration files. So this module needs to be added in all the other modules .
+      Note :-  All the modules must include the module = app-config-data . This is because the module = app-config-data is responsible  to read
+               the  various .yml configuration files. So app-config-data module needs to be added in all the other modules .
 
-               For example the class = RetryConfig in module = common-config module  relies on the RetryConfigData present in the module = app-config-data
+               The module = common-config includes the module = app-config-data .
+
+               For example the class = RetryConfig defined in module = common-config module  relies on the RetryConfigData present in
+               the module = app-config-data
 
                   @Configuration
                   public class RetryConfig {
