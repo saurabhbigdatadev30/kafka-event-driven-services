@@ -15,6 +15,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /*
  https://github.com/twitterdev/Twitter-API-v2-sample-code/blob/main/Filtered-Stream/FilteredStreamDemo.java
@@ -74,7 +75,7 @@ public class TwitterV2KafkaStreamRunner implements StreamRunner {
 
     private Map<String, String> getRules() {
         List<String> keywords = twitterToKafkaServiceConfigData.getTwitterKeywords();
-        Map<String, String> rules = new HashMap<>();
+        Map<String, String> rules = new ConcurrentHashMap<>();
         for (String keyword : keywords) {
             rules.put(keyword, "Keyword: " + keyword);
         }
