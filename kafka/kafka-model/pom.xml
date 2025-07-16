@@ -22,8 +22,8 @@
 
     <!--
     The avro-maven-plugin is used to create Java model class from the AvroSchema file . The schema file is stored with .avsc extension
-    kafka-model > mvn clean install --> The avro maven plugin  creates the java model from the schema file
-      -->
+    kafka-model > mvn clean install  The avro maven plugin  creates the java model from the schema file
+    -->
     <build>
         <plugins>
             <plugin>
@@ -42,6 +42,8 @@
                         <!--
                              We place the schema file  .avcs in the resources folder
                              The mvn clean install command will then generate the Model class in the src/main/java
+                             The generated class will be placed in the src/main/java folder
+                                 
                            -->
                         <configuration>
                             <sourceDirectory>${project.basedir}/src/main/resources/avro/</sourceDirectory>

@@ -2,6 +2,7 @@ version: '3.7'
 
 # run the command docker-compose -f common.yml -f kafka_cluster.yml up -d
 # This will start zookeeper , schema registry , 3 Kafka Brokers
+# docker-compose -f common.yml -f kafka_cluster.yml up -d
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:${KAFKA_VERSION:-latest}
@@ -18,6 +19,8 @@ services:
     networks:
       - ${GLOBAL_NETWORK:-kafka}
 
+# This is the schema registry service for Kafka.
+# It is used to manage schemas for Kafka topics.
 
   schema-registry:
     image: confluentinc/cp-schema-registry:${KAFKA_VERSION}
@@ -39,6 +42,12 @@ services:
       - ${GLOBAL_NETWORK:-kafka}
 
 
+# This is the Kafka cluster with 3 brokers.
+# Each broker is configured with its own ID and advertised listeners.
+# The brokers are connected to Zookeeper for coordination.
+# Each broker has its own port mapping for external access.
+# The advertised listeners are set up to allow both internal communication and external access.
+# The compression type is set to 'producer' for efficient message storage.
 
   kafka-broker-1:
     image: confluentinc/cp-kafka:${KAFKA_VERSION}
@@ -50,8 +59,9 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      # KAFKA_ADVERTISED_LISTENERS: <Listener 1 = Internal Communication> , Listener 2 = To access the container from outside i.e to access KAFKA Broker 1 >
-      # So we can access the Broker 1 =  http:///kafka-broker-1:19092
+      # KAFKA_ADVERTISED_LISTENERS: <Listener 1 = Internal Communication> , Listener 2 = To access the container from outside
+      # i.e to access KAFKA Broker 1 i.e hostname: kafka-broker-1
+      # So we can access the Broker 1 from outside using =  http:///kafka-broker-1:19092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker-1:9092,LISTENER_LOCAL://localhost:19092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,LISTENER_LOCAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
@@ -70,6 +80,10 @@ services:
     environment:
       KAFKA_BROKER_ID: 2
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+        # KAFKA_ADVERTISED_LISTENERS: <Listener 1 = Internal Communication> , Listener 2 = To access the container from outside
+        # i.e to access KAFKA Broker 2 i.e hostname: kafka-broker-2
+        # So we can access the Broker 2 from outside using =  http:///kafka-broker-2:29092
+      # To access the Kafka broker from docker , we cannot use the localhost:port , but we can use the hostname:port
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker-2:9092,LISTENER_LOCAL://localhost:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,LISTENER_LOCAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
@@ -97,4 +111,4 @@ services:
       - ${GLOBAL_NETWORK:-kafka}
 
 
-  # docker-compose -f common.yml -f kafka_cluster.yml -d
+  # docker-compose -f common.yml -f kafka_cluster.yml up -d

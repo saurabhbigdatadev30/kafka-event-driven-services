@@ -7,6 +7,7 @@ import twitter4j.Status;
 @Component
 public class TwitterStatusToAvroTransformer {
 
+    // This class is responsible for transforming Twitter Status objects into Avro models.
     public TwitterAvroModel getTwitterAvroModelFromStatus(Status status) {
         return TwitterAvroModel
                 .newBuilder()

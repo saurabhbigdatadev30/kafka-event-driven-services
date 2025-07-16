@@ -27,6 +27,7 @@ public class TwitterKafkaProducer implements KafkaProducer<Long, TwitterAvroMode
     @Override
     public void send(String topicName, Long key, TwitterAvroModel message) {
         LOG.info("Sending message='{}' to topic='{}'", message, topicName);
+        // key is the userId of the tweet, and message is the TwitterAvroModel, so send the message to same partition for the same userId
         CompletableFuture<SendResult<Long, TwitterAvroModel>> kafkaResultFuture = kafkaTemplate.send(topicName, key, message);
         kafkaResultFuture.whenComplete(getCallback(topicName, message));
     }
@@ -42,6 +43,7 @@ public class TwitterKafkaProducer implements KafkaProducer<Long, TwitterAvroMode
     private BiConsumer<SendResult<Long, TwitterAvroModel>, Throwable> getCallback(String topicName, TwitterAvroModel message) {
         return (result, ex) -> {
             if (ex == null) {
+                LOG.info("message sent successfully to topic {} with key {} and value {}", topicName, message.getUserId(), message);
                 RecordMetadata metadata = result.getRecordMetadata();
                 LOG.info("Received new metadata. Topic: {}; Partition {}; Offset {}; Timestamp {}, at time {}",
                         metadata.topic(),

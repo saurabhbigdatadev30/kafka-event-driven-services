@@ -69,6 +69,9 @@
      with com.microservices.demo package will be logged by using those two appender
 
      Log all the classes which is part of the package = com.microservices.demo
+     level = trace, debug, info, warn, error
+     In trace -> We log all the logs, which includes trace, debug, info, warn and error
+     In info -> We log all the logs, which includes info, warn and error, debug and trace will not be logged
     -->
     <logger name="com.microservices.demo" level="info" additivity="false">
         <appender-ref ref="FILE"/>

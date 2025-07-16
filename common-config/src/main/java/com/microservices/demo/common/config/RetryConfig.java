@@ -18,20 +18,7 @@ public class RetryConfig {
         this.retryConfigData = configData;
     }
 
-    /*
 
-    We need Retry logic, because when we start everything together including Kafka cluster and the services , using the docker-compose we  might
-    need to wait until Kafka cluster healthy and ready to create topics and returning list of topics.
-
-    For this we use spring RetryTemplate Creation of topics and checking existing of topics. Here we need retry logic,
-    because when we start everything together including Kafka cluster and your services, we  need to wait until Kafka cluster healthy
-    and ready to create topics and returning list of topics.
-
-    The RetryTemplate we created here will be used in the module kafka-admin , to create topic
-     (1) Create a @Bean = RetryTemplate.
-     (2) Set the  ExponentialBackOffPolicy .
-     (3) Set the  SimpleRetryPolicy
-     */
 
 
     @Bean

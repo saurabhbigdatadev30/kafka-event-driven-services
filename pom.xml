@@ -27,7 +27,7 @@
         <module>discovery-service</module>
 		<module>gateway-service</module>
 		<module>mdc-interceptor</module>
-		<module>test-module</module>
+		<!--<module>test-module</module>-->
 	</modules>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -105,6 +105,9 @@
 		</dependency>
 	</dependencies>
 
+	<!-- The dependencyManagement is responsible to
+
+	             -->
 	<dependencyManagement>
 		<dependencies>
 			<!-- LOCAL -->
@@ -420,6 +423,9 @@
 	<build>
 		<plugins>
 			<plugin>
+				<!-- maven-compiler-plugin plugin is used to compile the Java code -->
+				<!-- We are using Java 17 -->
+				<!-- The release tag is used to compile the code with the Java 17 features -->
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>${maven-compiler-plugin.version}</version>
@@ -430,6 +436,12 @@
 		</plugins>
 		<pluginManagement>
 			<plugins>
+				<!-- Spring Boot Maven Plugin is responsible to
+				     creates executable jar file with all the all application dependencies and can run with
+				     java -jar cmd
+				     Starts the spring-boot application before running the Integration tests
+				     Also can create docker image with spring-boot:build-image command
+				 -->
 				<plugin>
 					<groupId>org.springframework.boot</groupId>
 					<artifactId>spring-boot-maven-plugin</artifactId>

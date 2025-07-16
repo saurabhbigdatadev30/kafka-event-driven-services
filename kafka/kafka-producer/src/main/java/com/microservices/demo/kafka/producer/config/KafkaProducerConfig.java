@@ -14,10 +14,15 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+// This class is responsible for configuring the Kafka producer.
+
 @Configuration
 public class KafkaProducerConfig<K extends Serializable, V extends SpecificRecordBase> {
 
-    // Add maven dependency  app-config-data module  in kafka-producer module. This is to read the configurations from KafkaConfigData & KafkaProducerConfigData
+    /*
+      In the kafka-producer module, add maven dependency of  app-config-data module to read the configurations
+     from KafkaConfigData & KafkaProducerConfigData
+     */
     private final KafkaConfigData kafkaConfigData;
 
     private final KafkaProducerConfigData kafkaProducerConfigData;
@@ -27,6 +32,7 @@ public class KafkaProducerConfig<K extends Serializable, V extends SpecificRecor
         this.kafkaProducerConfigData = producerConfigData;
     }
 
+    // We create a bean of Map<String, Object> to hold the properties for ProducerConfig
     @Bean
     public Map<String, Object> producerConfig() {
         // Build the properties of ProducerConfig
@@ -42,6 +48,9 @@ public class KafkaProducerConfig<K extends Serializable, V extends SpecificRecor
         props.put(ProducerConfig.ACKS_CONFIG, kafkaProducerConfigData.getAcks());
         props.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, kafkaProducerConfigData.getRequestTimeoutMs());
         props.put(ProducerConfig.RETRIES_CONFIG, kafkaProducerConfigData.getRetryCount());
+        props.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG, kafkaProducerConfigData.getRetryBackoffMs());
+        props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, kafkaProducerConfigData.getEnableIdempotence());
+        props.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, kafkaProducerConfigData.getMaxInFlightRequestsPerConnection());
         return props;
     }
 

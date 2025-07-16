@@ -16,27 +16,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /*
  https://github.com/twitterdev/Twitter-API-v2-sample-code/blob/main/Filtered-Stream/FilteredStreamDemo.java
  */
 
 @Component
-/*
-StreamRunner Interface has 3 different implementations . The TwitterV2KafkaStreamRunner implementation will be loaded when
-twitter-to-kafka-service.enable-v2-tweets property is enabled
 
-The application.yml will have the below properties, to load particular implementation at runtime
-
-twitter-to-kafka-service:
- enable-v2-tweets: true
- enable-mock-tweets: false
-
- @ConditionalOnProperty annotation allows a particular Spring Bean to be loaded at runtime, based on a configuration value  if is set to true.
- This means that when the property  enable-v2-tweets is set as  true & enable-mock-tweets is set as false , in this case
- the TwitterV2KafkaStreamRunner will be loaded at runtime
-
- */
+// This will  enable the Twitter V2 Stream & the respective  Helper
 @ConditionalOnExpression("${twitter-to-kafka-service.enable-v2-tweets} && not ${twitter-to-kafka-service.enable-mock-tweets}")
 //@ConditionalOnProperty(name = "twitter-to-kafka-service.enable-v2-tweets", havingValue = "true", matchIfMissing = true)
 public class TwitterV2KafkaStreamRunner implements StreamRunner {
@@ -45,6 +33,7 @@ public class TwitterV2KafkaStreamRunner implements StreamRunner {
 
     private final TwitterToKafkaServiceConfigData twitterToKafkaServiceConfigData;
 
+    // The TwitterV2StreamHelper is a helper class that handles the connection to the Twitter V2 API and manages the stream
     private final TwitterV2StreamHelper twitterV2StreamHelper;
 
     public TwitterV2KafkaStreamRunner(TwitterToKafkaServiceConfigData configData,
@@ -73,13 +62,20 @@ public class TwitterV2KafkaStreamRunner implements StreamRunner {
         }
     }
 
+    // This method creates a map of rules for filtering tweets based on keywords.
     private Map<String, String> getRules() {
         List<String> keywords = twitterToKafkaServiceConfigData.getTwitterKeywords();
+      var rulesMap =   keywords.stream().collect(Collectors.toMap(
+                keyword -> keyword,
+                keyword -> "Keyword: " + keyword
+        ));
+
+
         Map<String, String> rules = new ConcurrentHashMap<>();
         for (String keyword : keywords) {
             rules.put(keyword, "Keyword: " + keyword);
         }
         LOG.info("Created filter for twitter stream for keywords {}", keywords.toArray());
-        return rules;
+        return rulesMap;
     }
 }

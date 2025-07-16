@@ -2,6 +2,7 @@ package com.microservices.demo.twitter.to.kafka.service;
 
 import com.microservices.demo.twitter.to.kafka.service.init.StreamInitializer;
 import com.microservices.demo.twitter.to.kafka.service.runner.StreamRunner;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -16,17 +17,23 @@ import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
 @ComponentScan(basePackages = "com.microservices.demo")
+@ComponentScan(basePackages = "com.microservices.demo.twitter.to.kafka.service")
 
+(1) When we work with multiple modules there will be spring beans that  will reside in different modules . So , it is required to allow finding
+    the spring beans of the other modules also inside this module.
 
-(1) When we work with multiple modules there will be some spring beans that  will reside in different modules . So , it is required to allow finding the spring
-    beans of the other modules also . When a spring boot application starts by default it scans the packages starting from the package directory.
+    For example, the TwitterToKafkaServiceConfigData.java which is used to read the configuration is located in the app-config-module,
+    When a spring boot application starts by default it scans only the packages  from the package directory where the
+    main application class is located.
 
-     We will use ->  com.microservices.demo as the starting package for all the packages in all the  modules.  Spring will scan and finds all the
-     beans that resides in all modules.So, every module will have a package structure that starts with com.microservices.demo, only
-     the remaining parts will be  different.
+     As a practice,  We will use ->  com.microservices.demo as the starting package for all the packages in all the modules.
+     So that Spring will scan and finds all the beans that resides in all modules.
 
-(2) In Twitter to Kafka service module , the base package is com.microservices.demo . For example, the Twitter to Kafka service config data class is in
-      com.microservices.demo.config package, which doesn't fit to the default scan definition.
+     So, every module will have a package structure that starts with com.microservices.demo, only the remaining parts will be  different.
+
+(2) In twitter-to-Kafka-service module , the base package is com.microservices.demo .
+    For example, the Twitter to Kafka service config data class is in com.microservices.demo.config package,
+    which doesn't fit to the default scan definition.
 
 In this case, we can use ComponentScan annotation with base packages and mention com.microservices.demo as the base package.
 Since we will use com.microservices.demo as the starting package for all packages in all modules.  Spring will scan and finds all the beans
@@ -41,9 +48,10 @@ this needs to be read in another module = Twitter to Kafka service module
 /*
    When the service starts , we need to read data from twitter , so we implement CommandLineRunner & override the run method
  */
+@Slf4j
 public class TwitterToKafkaServiceApplication implements CommandLineRunner {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TwitterToKafkaServiceApplication.class);
+  //  private static final Logger LOG = LoggerFactory.getLogger(TwitterToKafkaServiceApplication.class);
 
     private final StreamRunner streamRunner;
 
@@ -63,7 +71,7 @@ public class TwitterToKafkaServiceApplication implements CommandLineRunner {
     // We override the CommandLineRunner interface method
     @Override
     public void run(String... args) throws Exception {
-        LOG.info("App starts...");
+        log.info("App starts...");
         // init method is responsible to create Kafka Topic
         streamInitializer.init();
         streamRunner.start();

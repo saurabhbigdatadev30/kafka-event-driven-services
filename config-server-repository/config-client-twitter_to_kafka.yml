@@ -1,6 +1,8 @@
 server:
   port: 8181
-
+# This is the configuration for the Twitter to Kafka microservice.
+# It includes settings for connecting to Twitter's API, Kafka, and retry configurations.
+# It also includes mock tweet generation settings for testing purposes.
 twitter-to-kafka-service:
   twitter-keywords:
     - Java
@@ -8,11 +10,12 @@ twitter-to-kafka-service:
     - Kafka
     - Elasticsearch
   welcome-message: Hello microservices!
-  # Enable the TwitterV2KafkaStreamRunner implementation of the StreamRunner
-  enable-v2-tweets: true
-  enable-mock-tweets: false
+  # Enable the Twitter - 4J implementation of the StreamRunner
+  enable-v2-tweets: false
+  enable-mock-tweets: true
   twitter-v2-base-url: https://api.twitter.com/2/tweets/search/stream?tweet.fields=created_at&expansions=author_id
   twitter-v2-rules-base-url: https://api.twitter.com/2/tweets/search/stream/rules
+  # Twitter API Bearer Token reads from environment variable
   twitter-v2-bearer-token: ${TWITTER_BEARER_TOKEN}
   mock-min-tweet-length: 5
   mock-max-tweet-length: 15
@@ -25,6 +28,7 @@ retry-config:
   maxAttempts: 3
   sleep-time-ms: 2000
 
+# This is the configuration for the Kafka cluster.
 kafka-config:
   bootstrap-servers: localhost:19092, localhost:29092, localhost:39092
   schema-registry-url-key: schema.registry.url
@@ -36,13 +40,18 @@ kafka-config:
   num-of-partitions: 3
   replication-factor: 3
 
+# This is the configuration for the Kafka producer.
 kafka-producer-config:
   key-serializer-class: org.apache.kafka.common.serialization.LongSerializer
   value-serializer-class: io.confluent.kafka.serializers.KafkaAvroSerializer
   compression-type: snappy
   acks: all
+  enable-idempotence: true
+  max-in-flight-requests-per-connection: 5
   batch-size: 16384
   batch-size-boost-factor: 100
   linger-ms: 5
   request-timeout-ms: 60000
   retry-count: 5
+  retry-backoff-ms: 1000
+ # delivery-timeout-ms: 120000

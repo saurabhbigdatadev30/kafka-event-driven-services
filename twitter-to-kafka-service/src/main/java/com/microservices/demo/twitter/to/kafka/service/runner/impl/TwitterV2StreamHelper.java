@@ -35,19 +35,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 
 /*
 
 StreamRunner Interface has 3 different implementations .
-We load the V2 Implementation . ConditionalOnExpression annotation allows  to load a spring bean at runtime using a configuration value.
+We load the V2 Implementation . ConditionalOnExpression annotation allows  to load a spring bean at runtime using a configuration
+value.
 
-The application.yml will have the below properties, to load particular implementation at runtime
+The config-client-twitter_to_kafka.yml will have the below properties, to load particular implementation at runtime
 
 twitter-to-kafka-service:
  enable-v2-tweets: true
  enable-mock-tweets: false
+
+ So based on the above properties, the V2 implementation & the respective helper class  will be loaded at runtime.
+
  */
 
 
@@ -94,7 +99,7 @@ public class TwitterV2StreamHelper {
         */
     void connectStream(String bearerToken) throws IOException, URISyntaxException, TwitterException, JSONException {
 
-        // [1] Build HttpClient  object using Builder pattern
+        // [1] Build HttpClient object using Builder pattern
         HttpClient httpClient = HttpClients.custom()
                                 .setDefaultRequestConfig(RequestConfig.custom()
                                 .setCookieSpec(CookieSpecs.STANDARD).build())
@@ -118,6 +123,7 @@ public class TwitterV2StreamHelper {
         // [6] Get the Stream of Continues tweets and store this in BufferedReader
         HttpEntity entity = response.getEntity();
         if (null != entity) {
+            // Read the stream of tweets from the response entity in BufferedReader
             BufferedReader reader = new BufferedReader(new InputStreamReader((entity.getContent())));
             String line = reader.readLine();
             while (line != null) {
@@ -161,18 +167,18 @@ public class TwitterV2StreamHelper {
      * */
     private void createRules(String bearerToken, Map<String, String> rules) throws URISyntaxException, IOException {
 
-        // [1] Build the  HttpClient Object
+        // [1] Build HttpClient Object.
         HttpClient httpClient = HttpClients.custom()
                                            .setDefaultRequestConfig(RequestConfig.custom()
                                            .setCookieSpec(CookieSpecs.STANDARD).build())
                                            .build();
 
 
-        // [2] Build the  URIBuilder Object, Reading  the Base Rule URL from Configuration
+        // [2] Build URIBuilder Object, Reading Base Rule URL from Configuration
         URIBuilder uriBuilder = new URIBuilder(twitterToKafkaServiceConfigData.getTwitterV2RulesBaseUrl());
 
 
-        // [3] Build a Http Post request [HttpPost] Object. Set  the Bearer Token in the Header of HttpPost
+        // [3] Build a HttpPost request [HttpPost] Object. Set Bearer Token in the Header of HttpPost
         HttpPost httpPost = new HttpPost(uriBuilder.build());
         httpPost.setHeader("Authorization", String.format("Bearer %s", bearerToken));
         httpPost.setHeader("content-type", "application/json");
@@ -201,6 +207,10 @@ public class TwitterV2StreamHelper {
                         .setDefaultRequestConfig(RequestConfig.custom()
                         .setCookieSpec(CookieSpecs.STANDARD).build())
                         .build();
+
+      //var getRules = twitterToKafkaServiceConfigData.getTwitterKeywords();
+     // var ruleMap =  getRules.stream().collect(Collectors.toMap(r -> r , r -> "rule-" + r));
+
 
         URIBuilder uriBuilder = new URIBuilder(twitterToKafkaServiceConfigData.getTwitterV2RulesBaseUrl());
 
