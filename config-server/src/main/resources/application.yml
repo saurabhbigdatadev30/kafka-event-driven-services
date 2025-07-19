@@ -13,10 +13,10 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/agelenler/spring-cloud-config-server-repository
+          uri: https://github.com/saurabhbigdatadev30/kafka-event-driven-services.git
           default-label: main
-          username: ****
-          password: '****'
+          username: saurabhbigdatadev30
+          password: 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
           clone-on-start: true
     fail-fast: true
   security:

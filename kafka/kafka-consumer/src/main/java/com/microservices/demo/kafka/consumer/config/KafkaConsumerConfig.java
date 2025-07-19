@@ -64,7 +64,5 @@ public class KafkaConsumerConfig<K extends Serializable, V extends SpecificRecor
         factory.setAutoStartup(kafkaConsumerConfigData.getAutoStartup());
         factory.getContainerProperties().setPollTimeout(kafkaConsumerConfigData.getPollTimeoutMs());
         return factory;
-
-
     }
 }

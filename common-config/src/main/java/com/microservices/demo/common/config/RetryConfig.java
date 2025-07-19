@@ -18,9 +18,6 @@ public class RetryConfig {
         this.retryConfigData = configData;
     }
 
-
-
-
     @Bean
     public RetryTemplate retryTemplate() {
         RetryTemplate retryTemplate = new RetryTemplate();
@@ -37,7 +34,7 @@ public class RetryConfig {
         SimpleRetryPolicy simpleRetryPolicy = new SimpleRetryPolicy();
         simpleRetryPolicy.setMaxAttempts(retryConfigData.getMaxAttempts());
 
-        // Set retryTemplate for RetryPolicy
+        // [3] Set retryTemplate for RetryPolicy
         retryTemplate.setRetryPolicy(simpleRetryPolicy);
 
         return retryTemplate;
