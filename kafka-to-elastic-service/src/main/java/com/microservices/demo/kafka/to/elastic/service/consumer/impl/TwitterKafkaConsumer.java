@@ -53,6 +53,8 @@ public class TwitterKafkaConsumer implements KafkaConsumer<TwitterAvroModel> {
         this.elasticIndexClient = indexClient;
     }
 
+     //  This method is called when the application starts
+    // It checks if the Kafka topics are created and starts the listener container
     @EventListener
     public void onAppStarted(ApplicationStartedEvent event) {
         kafkaAdminClient.checkTopicsCreated();

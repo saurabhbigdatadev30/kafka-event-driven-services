@@ -25,7 +25,10 @@ public class TwitterIndexModel implements IndexModel {
     @JsonProperty
     private String text;
 
+    //convert createdAt, from local date time to the elasticsearch date during indexing operation
+    // for year, we use 'u' instead of 'y', which is the correct way of defining a year in the pattern for a custom Elasticsearch date.
     @Field(type = FieldType.Date, format = {}, pattern = "uuuu-MM-dd'T'HH:mm:ssZZ")
+    // Required parsing a Json to this object
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "uuuu-MM-dd'T'HH:mm:ssZZ")
     @JsonProperty
     private ZonedDateTime createdAt;

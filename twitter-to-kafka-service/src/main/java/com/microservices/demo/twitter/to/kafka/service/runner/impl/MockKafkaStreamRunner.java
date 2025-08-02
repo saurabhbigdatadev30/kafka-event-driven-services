@@ -25,8 +25,8 @@ import java.util.concurrent.ThreadLocalRandom;
 @Component
 @Slf4j
 //@ConditionalOnProperty(name = "twitter-to-kafka-service.enable-mock-tweets", havingValue = "true")
-// @ConditionalOnExpression("not ${twitter-to-kafka-service.enable-v2-tweets} &&  ${twitter-to-kafka-service.enable-mock-tweets}")
-@ConditionalOnExpression("!${twitter-to-kafka-service.enable-v2-tweets:false} && ${twitter-to-kafka-service.enable-mock-tweets:false}")
+ @ConditionalOnExpression("not ${twitter-to-kafka-service.enable-v2-tweets} &&  ${twitter-to-kafka-service.enable-mock-tweets}")
+
 public class MockKafkaStreamRunner implements StreamRunner {
 
     private final TwitterToKafkaServiceConfigData twitterToKafkaServiceConfigData;

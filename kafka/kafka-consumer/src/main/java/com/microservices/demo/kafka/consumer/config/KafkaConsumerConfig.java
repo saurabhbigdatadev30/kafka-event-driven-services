@@ -52,6 +52,7 @@ public class KafkaConsumerConfig<K extends Serializable, V extends SpecificRecor
 
     @Bean
     public ConsumerFactory<K, V> consumerFactory() {
+
         return new DefaultKafkaConsumerFactory<>(consumerConfigs());
     }
 
@@ -61,6 +62,7 @@ public class KafkaConsumerConfig<K extends Serializable, V extends SpecificRecor
         factory.setConsumerFactory(consumerFactory());
         factory.setBatchListener(kafkaConsumerConfigData.getBatchListener());
         factory.setConcurrency(kafkaConsumerConfigData.getConcurrencyLevel());
+        // THis is used to set the auto startup of the listener container , set this to false if you want to start the listener manually
         factory.setAutoStartup(kafkaConsumerConfigData.getAutoStartup());
         factory.getContainerProperties().setPollTimeout(kafkaConsumerConfigData.getPollTimeoutMs());
         return factory;
