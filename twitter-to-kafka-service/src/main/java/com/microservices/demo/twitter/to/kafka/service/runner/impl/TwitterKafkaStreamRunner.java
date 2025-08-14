@@ -57,7 +57,10 @@ public class TwitterKafkaStreamRunner implements StreamRunner {
     public void start() throws TwitterException {
         //Print the filter data to the log , reads the keywords from the configuration file
         log.info(twitterToKafkaServiceConfigData.getTwitterKeywords().toArray(new String[0])[0]);
+        // Instantiate the TwitterStream using TwitterStreamFactory
+        // Set the status listener to handle incoming tweets
         twitterStream = new TwitterStreamFactory().getInstance();
+        // invokes the onStatus method of the listener when a new tweet is received
         twitterStream.addListener(twitterKafkaStatusListener);
         addFilter();
     }

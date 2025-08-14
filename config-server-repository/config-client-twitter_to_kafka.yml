@@ -17,10 +17,12 @@ twitter-to-kafka-service:
   twitter-v2-rules-base-url: https://api.twitter.com/2/tweets/search/stream/rules
   # Twitter API Bearer Token reads from environment variable
   twitter-v2-bearer-token: ${TWITTER_BEARER_TOKEN}
-  mock-min-tweet-length: 5
-  mock-max-tweet-length: 15
-  mock-sleep-ms: 10000
+  mock-min-tweet-length: 5  # mockMinTweetLength in TwitterToKafkaService.java
+  mock-max-tweet-length: 15 # mockMaxTweetLength in TwitterToKafkaService.java
+  mock-sleep-ms: 10000      # mockSleepMs in TwitterToKafkaService.java
 
+# This is the configuration for the Kafka Retry mechanism.
+# It includes settings for the initial interval, maximum interval, multiplier, maximum attempts, and sleep
 retry-config:
   initial-interval-ms: 1000
   max-interval-ms: 10000
@@ -29,6 +31,7 @@ retry-config:
   sleep-time-ms: 2000
 
 # This is the configuration for the Kafka cluster.
+# It includes settings for the bootstrap servers, schema registry URL, topic names, and partitioning.
 kafka-config:
   bootstrap-servers: localhost:19092, localhost:29092, localhost:39092
   schema-registry-url-key: schema.registry.url

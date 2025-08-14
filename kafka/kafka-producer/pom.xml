@@ -9,7 +9,7 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
+<!-- This module creates & configures KafkaTemplate-->
     <artifactId>kafka-producer</artifactId>
 
     <dependencies>

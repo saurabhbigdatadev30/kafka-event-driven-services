@@ -44,3 +44,5 @@ public class TwitterToKafkaServiceConfigData {
     // Reads from Environment Variable
     private String twitterV2BearerToken; //   Reads from config-client-twitter_to_kafka.yml twitter-v2-bearer-token
 }
+
+// twitter-v2-rules-base-url: https://api.twitter.com/2/tweets/search/stream/rules

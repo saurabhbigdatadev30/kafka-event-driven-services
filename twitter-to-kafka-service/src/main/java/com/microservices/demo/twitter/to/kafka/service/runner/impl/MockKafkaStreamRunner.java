@@ -60,7 +60,7 @@ public class MockKafkaStreamRunner implements StreamRunner {
             "libero"
     };
 
-    // Structure of the tweet as raw JSON
+    // Structure of the tweet as raw JSON , tweets will contain the following fields: [created_at, tweet.id, text, user.id]
     private static final String tweetAsRawJson = "{" +
             "\"created_at\":\"{0}\"," +
             "\"id\":\"{1}\"," +
@@ -101,9 +101,13 @@ submit() method is used to run the tweet simulation in a separate thread impleme
             try {
                 log.info("Thread {} started for simulating twitter stream", Thread.currentThread().getName());
                 while (true) {
+                    // Generate a random tweet with the given keywords and length
                     String formattedTweetAsRawJson = getFormattedTweet(keywords, minTweetLength, maxTweetLength);
+                    // Create a Twitter Status object from the formatted tweet JSON
                     Status status = TwitterObjectFactory.createStatus(formattedTweetAsRawJson);
                     log.info("Simulated tweet generated: {}", status.getText());
+                    // Notify the listener about the new status
+                    // This will trigger the Kafka producer to send the tweet to the Kafka topic
                     twitterKafkaStatusListener.onStatus(status);
                     // Delay the next tweet creation by sleepTimeMs
                     sleep(sleepTimeMs);
@@ -123,18 +127,22 @@ submit() method is used to run the tweet simulation in a separate thread impleme
         }
     }
 
+    // tweet contains the following fields: [created_at, tweet.id, text, user.id]
     private String getFormattedTweet(String[] keywords, int minTweetLength, int maxTweetLength) {
         // Generate a random tweet with the given keywords and length
-        // The tweet will be formatted as a JSON string with the current date, a random ID, and the tweet content
+        // The tweet will be formatted as a JSON string with the (current date, a random ID, and the tweet content)
         String[] params = new String[]{
                 ZonedDateTime.now().format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH)),
+                // tweetID is a random long value
                 String.valueOf(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE)),
                 getRandomTweetContent(keywords, minTweetLength, maxTweetLength),
+                // userID is a random long value
                 String.valueOf(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
         };
         return formatTweetAsJsonWithParams(params);
     }
 
+    // This method formats the tweet as a JSON string by replacing the placeholders with the actual values
     private String formatTweetAsJsonWithParams(String[] params) {
         String tweet = tweetAsRawJson;
 

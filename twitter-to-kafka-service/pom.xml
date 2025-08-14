@@ -21,10 +21,12 @@
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!-- Using this module will use the RetryTemplate for the topic creation -->
         <dependency>
             <groupId>com.microservices.demo</groupId>
             <artifactId>kafka-admin</artifactId>
         </dependency>
+        <!-- Using the kafka-producer module will send the event to a kafka topic  -->
         <dependency>
             <groupId>com.microservices.demo</groupId>
             <artifactId>kafka-producer</artifactId>

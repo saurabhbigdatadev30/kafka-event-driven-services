@@ -174,12 +174,13 @@ public class TwitterV2StreamHelper {
                                            .build();
 
 
-        // [2] Build URIBuilder Object, Reading Base Rule URL from Configuration
+        // [2] Build URIBuilder Object, reading the Base Rule URL path from Configuration
         URIBuilder uriBuilder = new URIBuilder(twitterToKafkaServiceConfigData.getTwitterV2RulesBaseUrl());
 
 
-        // [3] Build a HttpPost request [HttpPost] Object. Set Bearer Token in the Header of HttpPost
+        // [3] Build a HttpPost request [HttpPost] Object. Set Bearer Token in the Header[Authorization] of HttpPost
         HttpPost httpPost = new HttpPost(uriBuilder.build());
+        // Set the Authorization header with Bearer Token for oAuth
         httpPost.setHeader("Authorization", String.format("Bearer %s", bearerToken));
         httpPost.setHeader("content-type", "application/json");
 
@@ -288,6 +289,7 @@ public class TwitterV2StreamHelper {
     }
 
     private String getFormattedTweet(String data) {
+        // Parse the raw tweet data into a JSON object
         JSONObject jsonData = (JSONObject)new JSONObject(data).get("data");
 
         String[] params = new String[]{
