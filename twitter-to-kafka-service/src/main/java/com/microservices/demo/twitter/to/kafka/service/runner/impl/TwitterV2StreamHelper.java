@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Component
@@ -42,7 +43,9 @@ import java.util.stream.Collectors;
 /*
 
 StreamRunner Interface has 3 different implementations .
-We load the V2 Implementation . ConditionalOnExpression annotation allows  to load a spring bean at runtime using a configuration
+We load the V2 Implementation .
+TwitterV2StreamHelper is a helper class to connect to Twitter V2 API and stream tweets.
+ConditionalOnExpression annotation allows  to load a spring bean at runtime using a configuration
 value. The config-client-twitter_to_kafka.yml will have the below properties, to load particular implementation at runtime
 
 twitter-to-kafka-service:
@@ -110,15 +113,16 @@ public class TwitterV2StreamHelper {
         // [4] Add the Bearer Token in the HttpGet Header for oAuth
         httpGet.setHeader("Authorization", String.format("Bearer %s", bearerToken));
 
-        // [5] Send Http Request to the Twitter V2 Base url , using the HttpClient
+        // [5] Send HttpRequest [HttpGet]  to the Twitter V2 Base url , using the HttpClient
         HttpResponse response = httpClient.execute(httpGet);
 
-        // [6] Get the Stream of continues tweets and store this in BufferedReader
+        // [6] Get the Stream of continues tweets in response &  store this in BufferedReader
         HttpEntity entity = response.getEntity();
         if (null != entity) {
-            // Read the stream of tweets from the response entity in BufferedReader
+            // Read the stream of tweets from the response entity in BufferedReader & convert to String
             BufferedReader reader = new BufferedReader(new InputStreamReader((entity.getContent())));
             String line = reader.readLine();
+            // Read the stream of tweets until the end of stream , this stream is continues
             while (line != null) {
                 line = reader.readLine();
                 if (!line.isEmpty()) {
@@ -155,8 +159,10 @@ public class TwitterV2StreamHelper {
     }
 
 
+
     /*
-     * Helper method to create rules for filtering
+     * Helper method to create rules for filtering .Create HttpPost request to the Twitter V2 Rules endpoint.
+     * The body of the request will contain the rules to be added.
      * */
     private void createRules(String bearerToken, Map<String, String> rules) throws URISyntaxException, IOException {
 
@@ -166,10 +172,8 @@ public class TwitterV2StreamHelper {
                                            .setCookieSpec(CookieSpecs.STANDARD).build())
                                            .build();
 
-
         // [2] Build URIBuilder Object, reading the Base Rule URL path from Configuration
         URIBuilder uriBuilder = new URIBuilder(twitterToKafkaServiceConfigData.getTwitterV2RulesBaseUrl());
-
 
         // [3] Build a HttpPost request [HttpPost] Object. Set Bearer Token in the Header[Authorization] of HttpPost
         HttpPost httpPost = new HttpPost(uriBuilder.build());
@@ -177,11 +181,9 @@ public class TwitterV2StreamHelper {
         httpPost.setHeader("Authorization", String.format("Bearer %s", bearerToken));
         httpPost.setHeader("content-type", "application/json");
 
-
         // [4] Set the rules in the HttpPost body
         StringEntity body = new StringEntity(getFormattedString("{\"add\": [%s]}", rules));
         httpPost.setEntity(body);
-
 
         // [5] Using the HttpClient , send the HttpPost
         HttpResponse response = httpClient.execute(httpPost);
@@ -202,10 +204,6 @@ public class TwitterV2StreamHelper {
                         .setCookieSpec(CookieSpecs.STANDARD).build())
                         .build();
 
-      //var getRules = twitterToKafkaServiceConfigData.getTwitterKeywords();
-     // var ruleMap =  getRules.stream().collect(Collectors.toMap(r -> r , r -> "rule-" + r));
-
-
         URIBuilder uriBuilder = new URIBuilder(twitterToKafkaServiceConfigData.getTwitterV2RulesBaseUrl());
 
         HttpGet httpGet = new HttpGet(uriBuilder.build());
@@ -216,6 +214,7 @@ public class TwitterV2StreamHelper {
         HttpResponse response = httpClient.execute(httpGet);
         HttpEntity entity = response.getEntity();
         if (null != entity) {
+            // Create JSON object [JSONObject] from the HTTP Response Entity  . Parse the response entity to JSON and extract rule
             JSONObject json = new JSONObject(EntityUtils.toString(entity, "UTF-8"));
             if (json.length() > 1 && json.has("data")) {
                 JSONArray array = (JSONArray) json.get("data");
@@ -281,12 +280,17 @@ public class TwitterV2StreamHelper {
         }
     }
 
+   /*
+     Parse the raw tweet data which we recived  and format it as a JSON string
+     The raw tweet data is in the form of a JSON string, which we parse and format into a specific JSON structure
+     The formatted tweet will contain the created_at date, tweet id, tweet content, and
+    */
     private String getFormattedTweet(String data) {
-        // Parse the raw tweet data into a JSON object
+        // Parse the raw tweet data into a JSON object , create a JSONObject from the raw data
         JSONObject jsonData = (JSONObject)new JSONObject(data).get("data");
-
         // (created_at, tweet.id, tweet.content, user.id)
         String[] params = new String[]{
+                // Convert the created_at date to UTC and then format it TWITTER_STATUS_DATE_FORMAT (e.g., "EEE MMM dd HH:mm:ss zzz yyyy")
                 ZonedDateTime.parse(jsonData.get("created_at").toString()).withZoneSameInstant(ZoneId.of("UTC"))
                         .format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH)),
                 jsonData.get("id").toString(),

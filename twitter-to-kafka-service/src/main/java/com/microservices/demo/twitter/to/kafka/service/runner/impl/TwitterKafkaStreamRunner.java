@@ -20,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 /*
   The TwitterKafkaStreamRunner class  implements the StreamRunner interface. This Bean is responsible for connecting to the Twitter API and
   listening for tweets that match certain keywords. This Bean will be loaded when enable-mock-tweets = false & enable-v2-tweets =false.
+  This class uses the Twitter4J library to create a Twitter stream and filter tweets based on keywords specified in the configuration.
+  It's a free service provided by Twitter to access tweets in real-time.
  */
 @Slf4j
 @Component
@@ -51,14 +53,12 @@ public class TwitterKafkaStreamRunner implements StreamRunner {
     }
 
     /**
-     * This method is used to start the Twitter stream and listen for tweets
-     * It reads the keywords from the configuration file and adds a filter to the Twitter stream
-     * to check for tweets containing those keywords
-     *
-     * @throws TwitterException if there is an error starting the Twitter stream
+     *  TwitterStreamFactory() constructs a factory for Twitter stream objects.
+     * .getInstance() returns a configured TwitterStream object, which is used to connect to the Twitter API
+     * and receive real-time tweets . This object is then used to add listeners and apply filters for streaming tweets.
      */
-    @Override
-    public void start() throws TwitterException {
+     @Override
+     public void start() throws TwitterException {
         //Print the filter data to the log , reads the keywords from the configuration file
         log.info(twitterToKafkaServiceConfigData.getTwitterKeywords().toArray(new String[0])[0]);
         // Instantiate the TwitterStream using TwitterStreamFactory

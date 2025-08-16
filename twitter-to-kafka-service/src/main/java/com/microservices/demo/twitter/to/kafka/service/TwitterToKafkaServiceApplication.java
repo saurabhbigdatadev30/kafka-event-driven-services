@@ -15,10 +15,8 @@ import org.springframework.context.annotation.ComponentScan;
 @Slf4j
 public class TwitterToKafkaServiceApplication implements CommandLineRunner {
 
-  //  private static final Logger LOG = LoggerFactory.getLogger(TwitterToKafkaServiceApplication.class);
-
     private final StreamRunner streamRunner;
-
+   // Check for the Topics are created
     private final StreamInitializer streamInitializer;
 
 
@@ -35,7 +33,7 @@ public class TwitterToKafkaServiceApplication implements CommandLineRunner {
     // We override the CommandLineRunner interface method
     @Override
     public void run(String... args) throws Exception {
-        log.info("App starts...>>>");
+         log.info("App starts...>>>");
         // init method is responsible to create Kafka Topic
         streamInitializer.init();
         streamRunner.start();

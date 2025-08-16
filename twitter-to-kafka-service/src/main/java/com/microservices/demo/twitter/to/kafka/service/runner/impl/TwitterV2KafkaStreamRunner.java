@@ -18,15 +18,16 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+
+// https://github.com/twitterdev/Twitter-API-v2-sample-code/blob/main/Filtered-Stream/FilteredStreamDemo.java
+
 /*
- https://github.com/twitterdev/Twitter-API-v2-sample-code/blob/main/Filtered-Stream/FilteredStreamDemo.java
+  This class implements the StreamRunner interface and is responsible for starting the Twitter V2 stream & will be getting
+  loaded only if the enable-v2-tweets = true & enable-mock-tweets = false
  */
-
 @Component
-
-// This will  enable the Twitter V2 Stream & the respective  Helper
 @ConditionalOnExpression("${twitter-to-kafka-service.enable-v2-tweets} && not ${twitter-to-kafka-service.enable-mock-tweets}")
-//@ConditionalOnProperty(name = "twitter-to-kafka-service.enable-v2-tweets", havingValue = "true", matchIfMissing = true)
+
 public class TwitterV2KafkaStreamRunner implements StreamRunner {
 
     private static final Logger LOG = LoggerFactory.getLogger(TwitterV2KafkaStreamRunner.class);
@@ -69,10 +70,6 @@ public class TwitterV2KafkaStreamRunner implements StreamRunner {
                 keyword -> keyword,
                 keyword -> "Keyword: " + keyword
         ));
-        Map<String, String> rules = new ConcurrentHashMap<>();
-        for (String keyword : keywords) {
-            rules.put(keyword, "Keyword: " + keyword);
-        }
         LOG.info("Created filter for twitter stream for keywords {}", keywords.toArray());
         return rulesMap;
     }
