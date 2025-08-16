@@ -43,18 +43,14 @@ import java.util.stream.Collectors;
 
 StreamRunner Interface has 3 different implementations .
 We load the V2 Implementation . ConditionalOnExpression annotation allows  to load a spring bean at runtime using a configuration
-value.
-
-The config-client-twitter_to_kafka.yml will have the below properties, to load particular implementation at runtime
+value. The config-client-twitter_to_kafka.yml will have the below properties, to load particular implementation at runtime
 
 twitter-to-kafka-service:
  enable-v2-tweets: true
  enable-mock-tweets: false
 
  So based on the above properties, the V2 implementation & the respective helper class  will be loaded at runtime.
-
  */
-
 
 @ConditionalOnExpression("${twitter-to-kafka-service.enable-v2-tweets} && not ${twitter-to-kafka-service.enable-mock-tweets}")
 //@ConditionalOnProperty(name = "twitter-to-kafka-service.enable-v2-tweets", havingValue = "true", matchIfMissing = true)
@@ -105,10 +101,8 @@ public class TwitterV2StreamHelper {
                                 .setCookieSpec(CookieSpecs.STANDARD).build())
                                 .build();
 
-
         // [2] Build URIBuilder, reading the BaseURL from the Configuration from .yml
         URIBuilder uriBuilder = new URIBuilder(twitterToKafkaServiceConfigData.getTwitterV2BaseUrl());
-
 
         // [3] Using the above created URIBuilder object , Build HttpGet Object.
         HttpGet httpGet = new HttpGet(uriBuilder.build());
@@ -116,11 +110,10 @@ public class TwitterV2StreamHelper {
         // [4] Add the Bearer Token in the HttpGet Header for oAuth
         httpGet.setHeader("Authorization", String.format("Bearer %s", bearerToken));
 
-
         // [5] Send Http Request to the Twitter V2 Base url , using the HttpClient
         HttpResponse response = httpClient.execute(httpGet);
 
-        // [6] Get the Stream of Continues tweets and store this in BufferedReader
+        // [6] Get the Stream of continues tweets and store this in BufferedReader
         HttpEntity entity = response.getEntity();
         if (null != entity) {
             // Read the stream of tweets from the response entity in BufferedReader
@@ -292,6 +285,7 @@ public class TwitterV2StreamHelper {
         // Parse the raw tweet data into a JSON object
         JSONObject jsonData = (JSONObject)new JSONObject(data).get("data");
 
+        // (created_at, tweet.id, tweet.content, user.id)
         String[] params = new String[]{
                 ZonedDateTime.parse(jsonData.get("created_at").toString()).withZoneSameInstant(ZoneId.of("UTC"))
                         .format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH)),

@@ -26,7 +26,7 @@
             <groupId>com.microservices.demo</groupId>
             <artifactId>kafka-admin</artifactId>
         </dependency>
-        <!-- Using the kafka-producer module will send the event to a kafka topic  -->
+        <!-- Using the kafka-producer module will send the event to a kafka topic KafkaTemplate  -->
         <dependency>
             <groupId>com.microservices.demo</groupId>
             <artifactId>kafka-producer</artifactId>

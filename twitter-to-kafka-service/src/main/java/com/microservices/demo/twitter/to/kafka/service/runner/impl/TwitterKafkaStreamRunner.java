@@ -17,6 +17,10 @@ import jakarta.annotation.PreDestroy;
 import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 
+/*
+  The TwitterKafkaStreamRunner class  implements the StreamRunner interface. This Bean is responsible for connecting to the Twitter API and
+  listening for tweets that match certain keywords. This Bean will be loaded when enable-mock-tweets = false & enable-v2-tweets =false.
+ */
 @Slf4j
 @Component
 @ConditionalOnExpression("not ${twitter-to-kafka-service.enable-mock-tweets} && not ${twitter-to-kafka-service.enable-v2-tweets}")

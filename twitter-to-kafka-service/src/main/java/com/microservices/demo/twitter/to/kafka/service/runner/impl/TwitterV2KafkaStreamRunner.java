@@ -69,8 +69,6 @@ public class TwitterV2KafkaStreamRunner implements StreamRunner {
                 keyword -> keyword,
                 keyword -> "Keyword: " + keyword
         ));
-
-
         Map<String, String> rules = new ConcurrentHashMap<>();
         for (String keyword : keywords) {
             rules.put(keyword, "Keyword: " + keyword);

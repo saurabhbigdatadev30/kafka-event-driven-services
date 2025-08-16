@@ -130,11 +130,12 @@ submit() method is used to run the tweet simulation in a separate thread impleme
     // tweet contains the following fields: [created_at, tweet.id, text, user.id]
     private String getFormattedTweet(String[] keywords, int minTweetLength, int maxTweetLength) {
         // Generate a random tweet with the given keywords and length
-        // The tweet will be formatted as a JSON string with the (current date, a random ID, and the tweet content)
+        // The tweet will be formatted as a JSON string with the (current date, tweet_id, tweet content ,user_id)
         String[] params = new String[]{
                 ZonedDateTime.now().format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH)),
                 // tweetID is a random long value
                 String.valueOf(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE)),
+                // tweet content is generated with random words and keywords
                 getRandomTweetContent(keywords, minTweetLength, maxTweetLength),
                 // userID is a random long value
                 String.valueOf(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))

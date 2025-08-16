@@ -19,9 +19,7 @@ import twitter4j.StatusAdapter;
  * and publishes it to a Kafka topic.
  */
 public class TwitterKafkaStatusListener extends StatusAdapter {
-
-    //private static final Logger LOG = LoggerFactory.getLogger(TwitterKafkaStatusListener.class);
-
+    // Dependencies: app-config-data module, kafka-producer module, kafka-model module
     private final KafkaConfigData kafkaConfigData;
 
     private final KafkaProducer<Long, TwitterAvroModel> kafkaProducer;
@@ -36,9 +34,12 @@ public class TwitterKafkaStatusListener extends StatusAdapter {
         this.twitterStatusToAvroTransformer = transformer;
     }
 
-   // This method will be called by Twitter4J when a new status is available
-   //  This is the entry point for processing tweets
-    // It will be called for each tweet that matches the filter criteria set in the Twitter stream
+    /**
+     * This method is called when a new status is received from Twitter.
+     * It transforms the status into an Avro model and publishes it to a Kafka topic.
+     * So this module has dependency to KafkaProducer and KafkaModel modules
+     * @param status The status received from Twitter.
+     */
     @Override
     public void onStatus(Status status) {
 
