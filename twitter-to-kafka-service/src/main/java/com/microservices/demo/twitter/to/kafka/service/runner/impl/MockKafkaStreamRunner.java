@@ -109,7 +109,8 @@ submit() method is used to run the tweet simulation in a separate thread impleme
                     // Notify the listener about the new status
                     // This will trigger the Kafka producer to send the tweet to the Kafka topic
                     twitterKafkaStatusListener.onStatus(status);
-                    // Delay the next tweet creation by sleepTimeMs
+                    // Add delay to simulate the time taken to create a tweet
+                    // This is to avoid flooding the Kafka topic with too many tweets in a short time
                     sleep(sleepTimeMs);
                 }
             } catch (TwitterException e) {

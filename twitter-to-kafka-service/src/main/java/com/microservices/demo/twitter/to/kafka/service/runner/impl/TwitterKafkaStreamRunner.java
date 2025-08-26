@@ -19,7 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 
 /*
   The TwitterKafkaStreamRunner class  implements the StreamRunner interface. This Bean is responsible for connecting to the Twitter API and
-  listening for tweets that match certain keywords. This Bean will be loaded when enable-mock-tweets = false & enable-v2-tweets =false.
+  listening for tweets that match certain keywords.
+  This Bean will be loaded when enable-mock-tweets = false & enable-v2-tweets =false.
   This class uses the Twitter4J library to create a Twitter stream and filter tweets based on keywords specified in the configuration.
   It's a free service provided by Twitter to access tweets in real-time.
  */
@@ -53,18 +54,23 @@ public class TwitterKafkaStreamRunner implements StreamRunner {
     }
 
     /**
-     *  TwitterStreamFactory() constructs a factory for Twitter stream objects.
-     * .getInstance() returns a configured TwitterStream object, which is used to connect to the Twitter API
-     * and receive real-time tweets . This object is then used to add listeners and apply filters for streaming tweets.
+     [1] Instantiate the TwitterStream using TwitterStreamFactory.
+                   twitterStream = new TwitterStreamFactory().getInstance();
+
+     [2] Add  listener to the TwitterStream. This listener will handle the incoming tweets and other events.
+                  twitterStream.addListener(twitterKafkaStatusListener);
+
+     [3] Configure the filter with the keywords. This will start the stream and filter tweets based on the specified keywords.
+                 FilterQuery filterQuery = new FilterQuery(keywords);
+                 twitterStream.filter(filterQuery);
      */
      @Override
      public void start() throws TwitterException {
-        //Print the filter data to the log , reads the keywords from the configuration file
+        // Print the filter data to the log , reads the keywords from the configuration file
         log.info(twitterToKafkaServiceConfigData.getTwitterKeywords().toArray(new String[0])[0]);
-        // Instantiate the TwitterStream using TwitterStreamFactory
-        // Set the status listener to handle incoming tweets
+        // [1] Instantiate the TwitterStream using TwitterStreamFactory
         twitterStream = new TwitterStreamFactory().getInstance();
-        // invokes the onStatus method of the listener when a new tweet is received
+        // [2] Add the listener to the TwitterStream , invokes the onStatus method of the listener when a new tweet is received
         twitterStream.addListener(twitterKafkaStatusListener);
         addFilter();
     }
@@ -85,8 +91,11 @@ public class TwitterKafkaStreamRunner implements StreamRunner {
      */
     private void addFilter() {
         String[] keywords = twitterToKafkaServiceConfigData.getTwitterKeywords().toArray(new String[0]);
-        FilterQuery filterQuery = new FilterQuery(keywords);
-        // Set the filter query to track the keywords
+         // Create a FilterQuery with the keywords
+         // The FilterQuery is used to filter tweets based on the specified keywords
+         FilterQuery filterQuery = new FilterQuery(keywords);
+        // [3] Configure the filter with the keywords and start filtering the Twitter stream
+         // This will start the stream and filter tweets based on the specified keywords
         twitterStream.filter(filterQuery);
         //  LOG.info("Started filtering twitter stream for keywords {}", Arrays.toString(keywords));
         log.info("Started filtering twitter stream for keywords {}", Arrays.toString(keywords));

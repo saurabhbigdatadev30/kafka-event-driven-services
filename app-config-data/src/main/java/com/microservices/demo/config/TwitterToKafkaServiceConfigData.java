@@ -21,7 +21,7 @@ twitter-to-kafka-service:
   enable-mock-tweets: false
   twitter-v2-base-url: https://api.twitter.com/2/tweets/search/stream?tweet.fields=created_at&expansions=author_id
   twitter-v2-rules-base-url: https://api.twitter.com/2/tweets/search/stream/rules
-  Read from Environment Variable
+  Read from Environment Variable , set the environment variable = TWITTER_BEARER_TOKEN
   twitter-v2-bearer-token: ${TWITTER_BEARER_TOKEN}
   mock-min-tweet-length: 5
   mock-max-tweet-length: 15
@@ -33,14 +33,14 @@ twitter-to-kafka-service:
 @Configuration
 @ConfigurationProperties(prefix = "twitter-to-kafka-service")
 public class TwitterToKafkaServiceConfigData {
-    private List<String> twitterKeywords;
-    private String welcomeMessage;          //  config-client-twitter_to_kafka.yml  =>  welcome-message
-    private Boolean enableMockTweets;       //  config-client-twitter_to_kafka.yml  =>  enable-mock-tweets
-    private Long mockSleepMs;              //   config-client-twitter_to_kafka.yml  =>  mock-sleep-ms
-    private Integer mockMinTweetLength;    //   config-client-twitter_to_kafka.yml  =>  mock-min-tweet-length
-    private Integer mockMaxTweetLength;   //    config-client-twitter_to_kafka.yml  =>  mock-max-tweet-length
-    private String twitterV2BaseUrl;      //    config-client-twitter_to_kafka.yml  =>  twitter-v2-base-url
-    private String twitterV2RulesBaseUrl; //    config-client-twitter_to_kafka.yml  =>  twitter-v2-rules-base-url
+    private List<String> twitterKeywords;    // =>  twitter-keywords
+    private String welcomeMessage;           // =>  welcome-message
+    private Boolean enableMockTweets;        // =>  enable-mock-tweets
+    private Long mockSleepMs;               //  =>  mock-sleep-ms
+    private Integer mockMinTweetLength;     //  =>  mock-min-tweet-length
+    private Integer mockMaxTweetLength;    //   =>  mock-max-tweet-length
+    private String twitterV2BaseUrl;      //   =>  twitter-v2-base-url
+    private String twitterV2RulesBaseUrl; //   =>  twitter-v2-rules-base-url
     // Reads from Environment Variable
     private String twitterV2BearerToken; //   Reads from config-client-twitter_to_kafka.yml twitter-v2-bearer-token
 }

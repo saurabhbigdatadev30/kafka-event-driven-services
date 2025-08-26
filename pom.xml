@@ -105,9 +105,6 @@
 		</dependency>
 	</dependencies>
 
-	<!-- The dependencyManagement is responsible to
-
-	             -->
 	<dependencyManagement>
 		<dependencies>
 			<!-- LOCAL -->
@@ -403,7 +400,7 @@
 				<version>2.1.1</version>
 			</dependency>
 
-	            <!-- TO send Request (GET / POST) to the Twitter API-->
+	            <!-- TO send Request (GET / POST) to the Twitter API Add this in twitter-to-kafka-service without version -->
 		    	<dependency>
 				<groupId>org.apache.httpcomponents</groupId>
 				<artifactId>httpclient</artifactId>
@@ -423,9 +420,6 @@
 	<build>
 		<plugins>
 			<plugin>
-				<!-- maven-compiler-plugin plugin is used to compile the Java code -->
-				<!-- We are using Java 17 -->
-				<!-- The release tag is used to compile the code with the Java 17 features -->
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>${maven-compiler-plugin.version}</version>
@@ -436,9 +430,8 @@
 		</plugins>
 		<pluginManagement>
 			<plugins>
-				<!-- Spring Boot Maven Plugin is responsible to
-				     creates executable jar file with all the all application dependencies and can run with
-				     java -jar cmd
+				<!-- Spring Boot Maven Plugin is responsible to creates executable jar file with all the all application
+				      dependencies and can run with  java -jar cmd
 				     Starts the spring-boot application before running the Integration tests
 				     Also can create docker image with spring-boot:build-image command
 				 -->
