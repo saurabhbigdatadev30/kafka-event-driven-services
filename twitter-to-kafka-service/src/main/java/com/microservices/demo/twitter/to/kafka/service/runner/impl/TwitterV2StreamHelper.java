@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 @Component
 
 /*
+https://github.com/xdevplatform/Twitter-API-v2-sample-code/blob/main/Filtered-Stream/FilteredStreamDemo.java
 
 StreamRunner Interface has 3 different implementations .
 We load the V2 Implementation .
@@ -80,6 +81,20 @@ public class TwitterV2StreamHelper {
         this.twitterKafkaStatusListener = twitterKafkaStatusListener;
     }
 
+    /*
+     [1] Build the HttpClient object using Builder pattern.
+     [2] Build URIBuilder, reading the twitter-v2-base-url  from the Configuration .yml file.
+     [3] Using the above created URIBuilder object , Build HttpGet Object.
+     [4] Add the Bearer Token in the HttpGet Header for oAuth Authorization.
+     [5] Send HttpRequest [HttpGet] to the Twitter V2 Base url , using the HttpClient. We get the HttpResponse object
+     [6] Build the HttpEntity from the HttpResponse object.
+     [7] From the HttpEntity build the  BufferedReader object, to read the stream of tweets from the Twitter V2 API.
+     [8] THe while loop never ends until we close the connection from our side or Twitter disconnects the connection.
+         We get continuous stream of tweets endlessly from Twitter V2 API endpoint until we disconnect in the while loop.
+         We read each line from the BufferedReader object, and for each line we create a Twitter4J Status object.
+         and pass it to TwitterKafkaStatusListener's onStatus method.
+     */
+
 
     void connectStream(String bearerToken) throws IOException, URISyntaxException, TwitterException, JSONException {
 
@@ -89,7 +104,7 @@ public class TwitterV2StreamHelper {
                                 .setCookieSpec(CookieSpecs.STANDARD).build())
                                 .build();
 
-        // [2] Build URIBuilder, reading the twitter-v2-base-url path  from the Configuration .yml file
+        // [2] Build URIBuilder, reading the twitter-v2-base-url  from the Configuration .yml file
         URIBuilder uriBuilder = new URIBuilder(twitterToKafkaServiceConfigData.getTwitterV2BaseUrl());
 
         // [3] Using the above created URIBuilder object , Build HttpGet Object.
@@ -98,18 +113,23 @@ public class TwitterV2StreamHelper {
         // [4] Add the Bearer Token in the HttpGet Header for oAuth Authorization
         httpGet.setHeader("Authorization", String.format("Bearer %s", bearerToken));
 
-        // [5] Send HttpRequest [HttpGet]  to the Twitter V2 Base url , using the HttpClient. We get the HttpResponse object
+        // [5] Send HttpRequest [HttpGet]  to the twitter-v2-base-url value , using the HttpClient.
+        // We get continues Stream of tweets from Twitter V2 API endpoint. We get the HttpResponse object
          HttpResponse response = httpClient.execute(httpGet);
 
         // [6] Build the HttpEntity from the HttpResponse object.
         HttpEntity entity = response.getEntity();
         if (null != entity) {
-            // [7] From the HttpEntity build the  BufferedReader object, to read the stream of tweets from the Twitter V2 API
+            // [7] From the HttpEntity build the  BufferedReader object, to read the continues stream of tweets from the Twitter V2 API
+            // The entity.getContent() returns an InputStream from the HTTP response body.
             BufferedReader reader = new BufferedReader(new InputStreamReader((entity.getContent())));
-            // Read the first line from the stream
+            // Read the first line from the stream of tweets.
             String tweetData = reader.readLine();
             LOG.info("Twitter stream has started streaming tweets");
-            // while loop never ends until we close the connection from our side or Twitter disconnects the connection
+
+            // The while loop never ends until we close the connection from our side or Twitter disconnects the connection
+            // We get continuous stream of tweets endlessly from Twitter V2 API endpoint until we disconnect in the while loop.
+            // [8] We read each line from the BufferedReader object, and for each line we create a Twitter4J Status object
             while (tweetData != null) {
                 tweetData = reader.readLine();
                 if (!tweetData.isEmpty()) {
@@ -119,13 +139,12 @@ public class TwitterV2StreamHelper {
 
                     // [7]  Create the status from the tweet
                     try {
-
                         status = TwitterObjectFactory.createStatus(tweet);
                     } catch (TwitterException e) {
                         LOG.error("Could not create status for text: {}", tweet, e);
                     }
                     if (status != null) {
-                        // We still use Twitter4J, to consume the Tweets
+                        // This will publish the tweet to the Kafka Topic
                         twitterKafkaStatusListener.onStatus(status);
                     }
                 }
@@ -202,7 +221,7 @@ public class TwitterV2StreamHelper {
     private List<String> getRules(String bearerToken) throws URISyntaxException, IOException {
         List<String> rules = new ArrayList<>();
 
-        // [1] Build HttpClient Object using Builder pattern. This HttpClient will be used to send the HttpGet request to the Twitter V2 API
+        // [1] Build HttpClient Object using Builder pattern. This HttpClient will be used to send the HttpGet Request to the Twitter V2 API
         HttpClient httpClient = HttpClients.custom()
                         .setDefaultRequestConfig(RequestConfig.custom()
                         .setCookieSpec(CookieSpecs.STANDARD).build())
@@ -211,7 +230,7 @@ public class TwitterV2StreamHelper {
         // [2] Build URIBuilder Object, reading the twitter-v2-rules-base-url from configuration
         URIBuilder uriBuilder = new URIBuilder(twitterToKafkaServiceConfigData.getTwitterV2RulesBaseUrl());
 
-        // [3] Build a HttpGet request [HttpGet] Object. Set Bearer Token in the Header[Authorization] of HttpGet
+        // [3] Build a HttpGet request [HttpGet] Object , passing the uriBuilder.  Set Bearer Token in the Header[Authorization] of HttpGet
         HttpGet httpGet = new HttpGet(uriBuilder.build());
         httpGet.setHeader("Authorization", String.format("Bearer %s", bearerToken));
         httpGet.setHeader("content-type", "application/json");
@@ -221,13 +240,14 @@ public class TwitterV2StreamHelper {
         // [5] Get the response entity from the HttpResponse
         HttpEntity entity = response.getEntity();
         if (null != entity) {
-            // [6] Create JSON object [JSONObject] from the HttpEntity. Reads the response body as a UTF-8 string.
+            // [6] Reads the HTTP ResponseBody from the Response HttpEntity as a UTF-8 string
+            // [7] Creates JSONObject from  this String to then fetch the JSON fields.
             JSONObject json = new JSONObject(EntityUtils.toString(entity, "UTF-8"));
             if (json.length() > 1 && json.has("data")) {
-                // [7] If the JSON object has "data" key, then extract the rules from the JSON object
+                // [8] If the JSON object has "data" key, then extract the rules from the JSON object
                 JSONArray array = (JSONArray) json.get("data");
                 for (int i = 0; i < array.length(); i++) {
-                    // [8]  The "data" key contains an array of rules, we will extract the "id
+                    // [9]  The "data" key contains an array of rules, we will extract the "id
                     JSONObject jsonObject = (JSONObject) array.get(i);
                     rules.add(jsonObject.getString("id"));
                 }
@@ -291,36 +311,38 @@ public class TwitterV2StreamHelper {
 
    /*
 ---------------------------------------------------------------------------------------------------------------------
-     Formatted tweet will be in the form of a JSON string with the following structure:
-     String data : 
-     {
-         "created_at": "Mon Apr 08 12:34:56 UTC 2024",
-         "id": "1234567890",
-         "text": "This is a sample tweet",
-         "author": {
-             "id": "9876543210"
-         }
-     }
+     Formatted tweet received from the V2 API  will be in the form of a JSON string with the following structure.
 
-  ## Understanding the getFormattedTweet method: (created_at)
+               String tweetData :
+                                   {
+                                       "created_at": "Mon Apr 08 12:34:56 UTC 2024",
+                                       "id": "1234567890",  // Tweet ID
+                                       "text": "This is a sample tweet",
+                                       "author": {
+                                           "id": "9876543210"  // Author ID
+                                     }
 
-     ZonedDateTime.parse(jsonData.get("created_at").toString())     : Converts the extracted date-time in String format to ZonedDateTime format.
-                  .withZoneSameInstant(ZoneId.of("UTC"))            : Converts the time extracted [ZonedDateTime]  to UTC.
-                  .format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH)), : Formats the UTC ZonedDateTime to a specific
-                                                                                                      pattern defined in TWITTER_STATUS_DATE_FORMAT.
----------------------------------------------------------------------------------------------------------------------
-    */
-    private String getFormattedTweet(String data) {
+        The getFormattedTweet() method will be called for each incoming tweet within the endless while() loop.
+        The loop only ends if the connection is closed or interrupted.
+        The getFormattedTweet() method extracts the tweetData from the JSON data and formats it into a structure compatible with
+         Twitter4J's Status object.
+         ZonedDateTime.parse(jsonData.get(created_at).toString()) : Converts the extracted date-time in String format to ZonedDateTime format.
+                      .withZoneSameInstant(ZoneId.of("UTC"))            : Converts the time extracted [ZonedDateTime]  to UTC format.
+                      .format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH)), : Formats the UTC ZonedDateTime to a specific
+                                                                                                          pattern defined in TWITTER_STATUS_DATE_FORMAT.
+     */
+
+    private String getFormattedTweet(String tweetData) {
         // Create a JSONObject extracting the "data" key .The "data" key contains the tweet information as value
-        // The tweet information includes the [created_at] , tweet id [id] , tweet content[text] , and [author_id]
-        JSONObject jsonData = (JSONObject)new JSONObject(data).get("data");
+        // Retrieves the "data" field from the JSON, which contains the tweet details.
+        JSONObject jsonData = (JSONObject)new JSONObject(tweetData).get("data");
         LOG.debug("Received tweet data: {}", jsonData);
         String[] params = new String[]{
                 ZonedDateTime.parse(jsonData.get("created_at").toString()).withZoneSameInstant(ZoneId.of("UTC"))
-                        .format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH)),
-                jsonData.get("id").toString(),
+                             .format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH)),
+                jsonData.get("id").toString(), // Tweet ID
                 jsonData.get("text").toString().replaceAll("\"","\\\\\""),
-                jsonData.get("author_id").toString(),
+                jsonData.get("author_id").toString(), // Author ID
         };
         return formatTweetAsJsonWithParams(params);
     }
