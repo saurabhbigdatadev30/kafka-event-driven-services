@@ -321,15 +321,20 @@ public class TwitterV2StreamHelper {
                                        "author": {
                                            "id": "9876543210"  // Author ID
                                      }
-
         The getFormattedTweet() method will be called for each incoming tweet within the endless while() loop.
         The loop only ends if the connection is closed or interrupted.
         The getFormattedTweet() method extracts the tweetData from the JSON data and formats it into a structure compatible with
-         Twitter4J's Status object.
-         ZonedDateTime.parse(jsonData.get(created_at).toString()) : Converts the extracted date-time in String format to ZonedDateTime format.
+        Twitter4J's Status object.
+
+         ZonedDateTime.parse(jsonData.get(created_at).toString())       : Converts the extracted date-time in String format to ZonedDateTime format.
                       .withZoneSameInstant(ZoneId.of("UTC"))            : Converts the time extracted [ZonedDateTime]  to UTC format.
-                      .format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH)), : Formats the UTC ZonedDateTime to a specific
+                      .format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH)) : Formats the UTC ZonedDateTime to a specific
                                                                                                           pattern defined in TWITTER_STATUS_DATE_FORMAT.
+
+            This statement parses the "created_at" date string from the tweet JSON, converts it to a ZonedDateTime,
+            adjusts it to UTC time zone, and formats it as a string using the pattern defined in TWITTER_STATUS_DATE_FORMAT
+            (e.g., EEE MMM dd HH:mm:ss zzz yyyy) with English locale. This ensures the tweet's timestamp is standardized to UTC
+             and formatted for Twitter4J compatibility.
      */
 
     private String getFormattedTweet(String tweetData) {
