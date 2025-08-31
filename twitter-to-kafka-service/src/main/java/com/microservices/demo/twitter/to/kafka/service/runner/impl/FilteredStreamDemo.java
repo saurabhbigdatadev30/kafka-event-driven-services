@@ -17,7 +17,7 @@ import org.json.JSONObject;
 import java.io.*;
 import java.net.URISyntaxException;
 import java.util.*;
-
+import java.util.function.Supplier;
 /*
  * Sample code to demonstrate the use of the Filtered Stream endpoint
  * */
@@ -31,7 +31,15 @@ public class FilteredStreamDemo {
             Map<String, String> rules = new HashMap<>();
             rules.put("cats has:images", "cat images");
             rules.put("dogs has:images", "dog images");
-            setupRules(bearerToken, rules);
+            // setupRules(bearerToken, rules);
+            // We define Higer-Order function to setup rules dynamically and pass it to the method
+            // that sets up the rules before streaming
+            setupRulesModified(bearerToken, () -> {
+                Map<String, String> rules1 = new HashMap<>();
+                rules1.put("cats has:images", "cat images");
+                rules1.put("dogs has:images", "dog images");
+                return rules;
+            });
             connectStream(bearerToken);
         } else {
             System.out.println("There was a problem getting your bearer token. Please make sure you set the BEARER_TOKEN environment variable");
@@ -67,6 +75,15 @@ public class FilteredStreamDemo {
         }
 
     }
+    private static void setupRulesModified(String bearerToken, Supplier<Map<String, String>> rulesSupplier)
+            throws IOException, URISyntaxException {
+        Map<String, String> rules = rulesSupplier.get();
+        List<String> existingRules = getRules(bearerToken);
+        if (existingRules.size() > 0) {
+            deleteRules(bearerToken, existingRules);
+        }
+        createRules(bearerToken, rules);
+    }
 
     /*
      * Helper method to setup rules before streaming data
@@ -84,9 +101,9 @@ public class FilteredStreamDemo {
      * */
     private static void createRules(String bearerToken, Map<String, String> rules) throws URISyntaxException, IOException {
         HttpClient httpClient = HttpClients.custom()
-                .setDefaultRequestConfig(RequestConfig.custom()
-                        .setCookieSpec(CookieSpecs.STANDARD).build())
-                .build();
+                 .setDefaultRequestConfig(RequestConfig.custom()
+                 .setCookieSpec(CookieSpecs.STANDARD).build())
+                 .build();
 
         URIBuilder uriBuilder = new URIBuilder("https://api.twitter.com/2/tweets/search/stream/rules");
 

@@ -14,6 +14,7 @@ import twitter4j.Status;
 import twitter4j.TwitterException;
 import twitter4j.TwitterObjectFactory;
 
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -25,6 +26,8 @@ import java.util.concurrent.ThreadLocalRandom;
 @Component
 @Slf4j
 //@ConditionalOnProperty(name = "twitter-to-kafka-service.enable-mock-tweets", havingValue = "true")
+// MockKafkaStreamRunner is only enabled when enable-mock-tweets is true and enable-v2-tweets is false.
+// This is to ensure that only one StreamRunner implementation is active at a time.
  @ConditionalOnExpression("not ${twitter-to-kafka-service.enable-v2-tweets} &&  ${twitter-to-kafka-service.enable-mock-tweets}")
 
 public class MockKafkaStreamRunner implements StreamRunner {
@@ -68,8 +71,23 @@ public class MockKafkaStreamRunner implements StreamRunner {
             "\"user\":{\"id\":\"{3}\"}" +
             "}";
 
+    // EEE -> Day of the week in short form (e.g., Mon, Tue)
+    // MMM -> Month in short form (e.g., Jan, Feb ,...)
+    // dd  -> Day of the month (01 to 31)
+    // HH  -> Hour in 24-hour format (00 to 23)
+    // mm  -> Minutes (00 to 59)
+    // ss  -> Seconds (00 to 59)
+    // zzz -> Time zone (e.g., GMT, PST)
+    // yyyy -> Year in four digits (e.g., 2023)
     private static final String TWITTER_STATUS_DATE_FORMAT = "EEE MMM dd HH:mm:ss zzz yyyy";
 
+    /*
+     ## Constructor-based Dependency Injection
+          Manually writing the constructor is better than using the  @AllArgsConstructor annotation.
+          The lombok annotation @AllArgsConstructor will include all fields (including constants and parameters we don't want injected).
+          in the generated constructor. By writing the constructor manually, we control which fields are injected and which
+          are initialized internally . This ensures only the required dependencies are passed in.
+     */
     public MockKafkaStreamRunner(TwitterToKafkaServiceConfigData configData,
                                  TwitterKafkaStatusListener statusListener) {
         this.twitterToKafkaServiceConfigData = configData;
@@ -96,6 +114,7 @@ submit() method is used to run the tweet simulation in a separate thread impleme
  */
 
     private void simulateTwitterStream(String[] keywords, int minTweetLength, int maxTweetLength, long sleepTimeMs) {
+        // () -> { code to run }  ->  Lambda expression implementing Runnable interface
         Executors.newSingleThreadExecutor().submit(() -> {
             // Lambda expression to run the tweet simulation in a separate thread implementing Runnable
             try {
@@ -133,7 +152,11 @@ submit() method is used to run the tweet simulation in a separate thread impleme
         // Generate a random tweet with the given keywords and length
         // The tweet will be formatted as a JSON string with the (current date, tweet_id, tweet content ,user_id)
         String[] params = new String[]{
-                ZonedDateTime.now().format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH)),
+                // ZonedDateTime.now().format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH)),
+                // The below code converts the current ZonedDateTime to UTC timezone and formats it to match Twitter's date format
+                ZonedDateTime.now()
+                        .withZoneSameInstant(ZoneId.of("UTC"))
+                        .format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH)),
                 // tweetID is a random long value
                 String.valueOf(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE)),
                 // tweet content is generated with random words and keywords

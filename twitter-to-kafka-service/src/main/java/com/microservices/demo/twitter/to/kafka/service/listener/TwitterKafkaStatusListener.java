@@ -12,16 +12,18 @@ import twitter4j.Status;
 import twitter4j.StatusAdapter;
 @Slf4j
 @Component
+
+
 /*
-* * This class is a listener for Twitter statuses.
- * It extends StatusAdapter to receive status updates from Twitter4J.
- * When a new status is received, it transforms the status into an Avro model
- * and publishes it to a Kafka topic.
+     This class extends StatusAdapter & overrides the onStatus method.
+     onStatus method --> When a new status is received, it transforms the status into an Avro model
+     and publishes it to a Kafka topic.
+     This class has dependencies to KafkaProducer , app-config-data  and KafkaModel modules
  */
 public class TwitterKafkaStatusListener extends StatusAdapter {
     // Dependencies: app-config-data module,
     private final KafkaConfigData kafkaConfigData;
-   // Dependencies:  kafka-producer module
+   // Dependencies:  kafka-producer module,
     private final KafkaProducer<Long, TwitterAvroModel> kafkaProducer;
 
     private final TwitterStatusToAvroTransformer twitterStatusToAvroTransformer;

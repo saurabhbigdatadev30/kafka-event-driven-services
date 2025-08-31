@@ -47,6 +47,13 @@ public class TwitterKafkaStreamRunner implements StreamRunner {
      * @param configData        Configuration data for the Twitter to Kafka service
      * @param statusListener    Listener for Twitter stream status updates
      */
+    /*
+       We are not using the @AllArgsConstructor here because we want to explicitly define the constructor
+       and inject the dependencies via constructor injection. This makes the code more readable and easy to understand.
+       Also, it allows us to add additional logic in the constructor if needed in the future.
+       We don't inject the TwitterStream here because we want to create a new instance of TwitterStream
+       each time the start() method is called. This ensures that we have a fresh connection to the Twitter API
+     */
     public TwitterKafkaStreamRunner(TwitterToKafkaServiceConfigData configData,
                                     TwitterKafkaStatusListener statusListener) {
         this.twitterToKafkaServiceConfigData = configData;
@@ -54,8 +61,35 @@ public class TwitterKafkaStreamRunner implements StreamRunner {
     }
 
     /**
+     --------------------------------------------------------------------------------------------------------------------------------------
      [1] Instantiate the TwitterStream using TwitterStreamFactory.
                    twitterStream = new TwitterStreamFactory().getInstance();
+
+     Note:
+     Ideally TwitterStreamFactory should be created as a @Bean in a Configuration class and should be injected here.
+
+     // [1] TwitterStreamConfig.java -- We create @Bean TwitterStream in a Configuration class [TwitterStreamConfig]
+
+          @Configuration
+          public class TwitterStreamConfig {
+
+                  @Bean
+                  public TwitterStream twitterStream() {
+                  return new TwitterStreamFactory().getInstance();
+                  }
+
+             }
+
+            // [2] In the class TwitterKafkaStreamRunner.java -- We will inject the TwitterStream bean in the constructor injection
+                    instead of creating a new instance and use it in the start() method
+            public class TwitterKafkaStreamRunner
+               {
+                 private final TwitterStream twitterStream;
+
+                 public TwitterKafkaStreamRunner(TwitterToKafkaServiceConfigData configData,
+                                                 TwitterKafkaStatusListener statusListener,
+                                                 TwitterStream twitterStream) {
+ -----------------------------------------------------------------------------------------------------------------------------------------------
 
      [2] Add  listener to the TwitterStream. This listener will handle the incoming tweets and other events.
                   twitterStream.addListener(twitterKafkaStatusListener);
@@ -68,7 +102,8 @@ public class TwitterKafkaStreamRunner implements StreamRunner {
      public void start() throws TwitterException {
         // Print the filter data to the log , reads the keywords from the configuration file
         log.info(twitterToKafkaServiceConfigData.getTwitterKeywords().toArray(new String[0])[0]);
-        // [1] Instantiate the TwitterStream using TwitterStreamFactory
+        // [1] Instantiate the TwitterStream using TwitterStreamFactory , should ideally be a @Bean
+         // in a Configuration class and should be injected here.
         twitterStream = new TwitterStreamFactory().getInstance();
         // [2] Add the listener to the TwitterStream , invokes the onStatus method of the listener when a new tweet is received
         twitterStream.addListener(twitterKafkaStatusListener);

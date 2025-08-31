@@ -49,7 +49,15 @@ public class TwitterV2KafkaStreamRunner implements StreamRunner {
         String bearerToken = twitterToKafkaServiceConfigData.getTwitterV2BearerToken();
         if (null != bearerToken) {
             try {
-                twitterV2StreamHelper.setupRules(bearerToken, getRules());
+                // twitterV2StreamHelper.setupRules(bearerToken, getRules());
+                // Create High Order Function to get rules dynamically
+                twitterV2StreamHelper.setupRulesModified(bearerToken, () -> {
+                    Map<String, String> rules = new HashMap<>();
+                    rules.put("cats has:images", "cat images");
+                    rules.put("dogs has:images", "dog images");
+                    return rules;
+                });
+
                 // Connect to the Twitter V2 stream API , start streaming tweets based on defined rules & send this to Kafka
                 twitterV2StreamHelper.connectStream(bearerToken);
             } catch (IOException | URISyntaxException | TwitterException | JSONException e) {
@@ -63,6 +71,8 @@ public class TwitterV2KafkaStreamRunner implements StreamRunner {
                     "Please make sure you set the TWITTER_BEARER_TOKEN environment variable");
         }
     }
+
+
 
     // This method creates a map of rules for filtering tweets based on keywords.
     private Map<String, String> getRules() {
