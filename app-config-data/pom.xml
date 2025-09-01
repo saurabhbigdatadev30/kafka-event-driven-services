@@ -11,6 +11,44 @@
 
     <artifactId>app-config-data</artifactId>
 
+    <!--
+         This module reads the configuration from the Spring Cloud Config Server.
+         spring-boot dependency is added as dependency,  to add @Configuration and @ConfigurationProperties in the config classes in this module.
+         We also define the @Lombok Data annotation to avoid boilerplate code  - getters and setters in the config classes.
+
+         Other modules / services  will use this module as dependency to read the configuration .
+         For this we add this module as dependency in other modules / services pom.xml file
+
+         i.e In twitter-to-kafka-service/pom.xml we add
+
+         (1) Add dependency to the app-config-data module in the dependencies section of the pom.xml file of
+            twitter-to-kafka-service module
+
+                  <dependency>
+                   <groupId>com.microservices.demo</groupId>
+                   <artifactId>app-config-data</artifactId>
+                  </dependency>
+
+         (2) ) Prior to this we add the dependency  in the <dependencyManagement> section of the parent project pom.xml file.
+
+                    <dependencyManagement>
+                        <dependencies>
+                            <dependency>
+                                <groupId>com.microservices.demo</groupId>
+                                <artifactId>app-config-data</artifactId>
+                                <version>${project.version}</version>
+                            </dependency>
+                        </dependencies>
+                    </dependencyManagement>
+
+
+      (3) Previously, we were using a different package in twitter-to-Kafka-service for the Config class, but now Config class is in
+          up config-data-module . So when we build the twitter-to-Kafka-service, it will give
+          compilation error for import statements.
+          So we build the application (twitter-to-Kafka-service) to see the import errors now. And then update the
+          references to correct imports, the config class from the new module up config data instead of Twitter to Kafka service.
+
+         -->
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
