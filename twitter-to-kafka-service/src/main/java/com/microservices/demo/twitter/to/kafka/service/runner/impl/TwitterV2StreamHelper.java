@@ -147,7 +147,7 @@ public class TwitterV2StreamHelper {
                                      }
                          */
                     // Format the Tweets as per Twitter4J Status object format
-                    // tweet = (created_at, id, text, author_id)
+                    // extract in tweet = (created_at, id, text, author_id)
                     String tweet = getFormattedTweet(tweetData);
                     Status status = null;
 
@@ -343,10 +343,10 @@ public class TwitterV2StreamHelper {
                String tweetData :
                                    {
                                        "created_at": "Mon Apr 08 12:34:56 UTC 2024",
-                                       "id": "1234567890",  // Tweet ID
+                                       "id": "1234567890",  // Tweet_ID
                                        "text": "This is a sample tweet",
                                        "author": {
-                                           "id": "9876543210"  // Author ID
+                                           "id": "9876543210"  // Author_ID
                                      }
         The getFormattedTweet() method will be called for each incoming tweet within the endless while() loop.
         The loop only ends if the connection is closed or interrupted.
@@ -374,7 +374,7 @@ public class TwitterV2StreamHelper {
 
     private String getFormattedTweet(String tweetData) {
           /*
-              Creates a JSONObject from tweetData to parse the JSON string and extract the tweet data fields
+               Create JSONObject from tweetData to parse the JSON string and extract the tweet data fields
                 (created_at, id, text, and author_id) from the tweet's JSON structure.
          */
         JSONObject jsonData = (JSONObject) new JSONObject(tweetData).get("data");
@@ -400,9 +400,21 @@ public class TwitterV2StreamHelper {
         return tweet;
     }
 
-// Higher order function which takes a Supplier functional interface as input
+// We define the method setupRulesModified that takes  Higher order function which takes a Supplier functional interface as input
 // The Supplier functional interface is used to pass the rules map to the setupRulesModified method
-     void setupRulesModified(String bearerToken, Supplier<Map<String, String>> rulesSupplier) throws IOException, URISyntaxException {
+/*
+    Defining setupRulesModified() as a higher-order function with a Supplier<Map<String, String>> argument provides these advantages:
+    Flexibility: The rules can be generated dynamically at runtime, not just passed as static data.
+    Testability: You can easily mock or inject different rule sets for testing.
+    Separation of concerns: Rule creation logic is decoupled from the method, making the code cleaner and easier to maintain.
+    Reusability: The same method (setupRulesModified)  can be reused with different rule suppliers in various scenarios.
+     */
+     void setupRulesModified(String bearerToken, Supplier<Map<String, String>> rulesSupplier)
+             throws IOException, URISyntaxException {
+         /*
+           Get the rules from the Supplier functional interface , we can have different implementations of rulesSupplier
+           which can provide different sets of rules dynamically at runtime
+          */
         Map<String, String> rules = rulesSupplier.get();
         List<String> existingRules = getRules(bearerToken);
         if (existingRules.size() > 0) {

@@ -50,7 +50,20 @@ public class TwitterV2KafkaStreamRunner implements StreamRunner {
         if (null != bearerToken) {
             try {
                 // twitterV2StreamHelper.setupRules(bearerToken, getRules());
-                // Create High Order Function to get rules dynamically
+
+                /*
+                   ## Lambda Expression : Java 8 Feature Key Points
+                   The advantage of using a lambda expression here is that it allows for more flexibility and reusability.
+                   By passing a Supplier<Map<String, String>> as argument to the setupRulesModified method, we can easily change the way
+                   rules are generated without modifying the method itself.
+
+                    The signature of the method [setupRulesModified] remains the same, but the logic for generating the rules
+                    can be changed by passing different lambda expressions.
+                    This allows for better separation of concerns, as the method is only responsible for
+                    setting up the rules . This makes the code more modular and easier to maintain.
+                    Additionally, using a lambda expression can make the code more concise and easier to read, especially
+                    when the logic for generating the rules is simple and can be expressed in a single line.
+                 */
                 twitterV2StreamHelper.setupRulesModified(bearerToken, () -> {
                     Map<String, String> rules = new HashMap<>();
                     rules.put("cats has:images", "cat images");

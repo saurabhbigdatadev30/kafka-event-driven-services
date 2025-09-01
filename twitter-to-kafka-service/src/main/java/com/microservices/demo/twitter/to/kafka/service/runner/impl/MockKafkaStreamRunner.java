@@ -25,9 +25,11 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Component
 @Slf4j
-//@ConditionalOnProperty(name = "twitter-to-kafka-service.enable-mock-tweets", havingValue = "true")
-// MockKafkaStreamRunner is only enabled when enable-mock-tweets is true and enable-v2-tweets is false.
-// This is to ensure that only one StreamRunner implementation is active at a time.
+/*
+  @ConditionalOnProperty(name = "twitter-to-kafka-service.enable-mock-tweets", havingValue = "true")
+   MockKafkaStreamRunner is only enabled when enable-mock-tweets is true and enable-v2-tweets is false.
+   This is to ensure that only one StreamRunner implementation is active at a time.
+ */
  @ConditionalOnExpression("not ${twitter-to-kafka-service.enable-v2-tweets} &&  ${twitter-to-kafka-service.enable-mock-tweets}")
 
 public class MockKafkaStreamRunner implements StreamRunner {
@@ -71,18 +73,24 @@ public class MockKafkaStreamRunner implements StreamRunner {
             "\"user\":{\"id\":\"{3}\"}" +
             "}";
 
-    // EEE -> Day of the week in short form (e.g., Mon, Tue)
-    // MMM -> Month in short form (e.g., Jan, Feb ,...)
-    // dd  -> Day of the month (01 to 31)
-    // HH  -> Hour in 24-hour format (00 to 23)
-    // mm  -> Minutes (00 to 59)
-    // ss  -> Seconds (00 to 59)
-    // zzz -> Time zone (e.g., GMT, PST)
-    // yyyy -> Year in four digits (e.g., 2023)
+   /*
+    Twitter's date format pattern
+
+    Reference: https://developer.twitter.com/en/docs/twitter-api/v1/data-dictionary/object
+
+         EEE -> Day of the week in short form (e.g., Mon, Tue)
+         MMM -> Month in short form (e.g., Jan, Feb ,...)
+         dd  -> Day of the month (01 to 31)
+         HH  -> Hour in 24-hour format (00 to 23)
+         mm  -> Minutes (00 to 59)
+         ss  -> Seconds (00 to 59)
+         zzz -> Time zone (e.g., GMT, PST)
+         yyyy -> Year in four digits (e.g., 2023)
+         */
     private static final String TWITTER_STATUS_DATE_FORMAT = "EEE MMM dd HH:mm:ss zzz yyyy";
 
     /*
-     ## Constructor-based Dependency Injection
+    + Constructor-based Dependency Injection
           Manually writing the constructor is better than using the  @AllArgsConstructor annotation.
           The lombok annotation @AllArgsConstructor will include all fields (including constants and parameters we don't want injected).
           in the generated constructor. By writing the constructor manually, we control which fields are injected and which
@@ -107,10 +115,9 @@ public class MockKafkaStreamRunner implements StreamRunner {
 
 
 /*
-
-simulateTwitterStream method generates tweets with random content in infinite loop,with random length between min and max tweet length.
-We don't want to block the main thread, so we use a single thread executor to simulate the twitter stream.
-submit() method is used to run the tweet simulation in a separate thread implementing Functional Interface Runnable.
+  simulateTwitterStream() method generates tweets with random content in infinite loop ,with random length between min and max tweet length.
+  We don't want to block the main thread, so we use a ExecutoService --> SingleThreadExecutor to simulate the twitter stream.
+  submit() method is used to run the tweet simulation in a separate thread implementing Functional Interface Runnable.
  */
 
     private void simulateTwitterStream(String[] keywords, int minTweetLength, int maxTweetLength, long sleepTimeMs) {
@@ -121,6 +128,7 @@ submit() method is used to run the tweet simulation in a separate thread impleme
                 log.info("Thread {} started for simulating twitter stream", Thread.currentThread().getName());
                 while (true) {
                     // Generate a random tweet with the given keywords and length
+                    // The tweet will be formatted as a JSON string with the (current date, tweet_id, tweet content ,user_id)
                     String formattedTweetAsRawJson = getFormattedTweet(keywords, minTweetLength, maxTweetLength);
                     // Create a Twitter Status object from the formatted tweet JSON
                     Status status = TwitterObjectFactory.createStatus(formattedTweetAsRawJson);
@@ -129,7 +137,7 @@ submit() method is used to run the tweet simulation in a separate thread impleme
                     // This will trigger the Kafka producer to send the tweet to the Kafka topic
                     twitterKafkaStatusListener.onStatus(status);
                     // Add delay to simulate the time taken to create a tweet
-                    // This is to avoid flooding the Kafka topic with too many tweets in a short time
+                    // This is to avoid flooding the Kafka topic with too many tweets in a short time.
                     sleep(sleepTimeMs);
                 }
             } catch (TwitterException e) {
@@ -147,16 +155,30 @@ submit() method is used to run the tweet simulation in a separate thread impleme
         }
     }
 
-    // tweet contains the following fields: [created_at, tweet.id, text, user.id]
+    // Create tweet , contains the following fields: [created_at, tweet.id, text, user.id]
     private String getFormattedTweet(String[] keywords, int minTweetLength, int maxTweetLength) {
         // Generate a random tweet with the given keywords and length
         // The tweet will be formatted as a JSON string with the (current date, tweet_id, tweet content ,user_id)
+
+
+    /*
+        ----------------------------------------------------------------------------------------------------------------------
+          ## Understanding the difference between ZonedDateTime vs Instant
+              ZonedDateTime represents a date and time with a timezone (e.g., 2024-06-10T10:15:30+01:00[Europe/London]).
+              Instant represents a moment on the UTC timeline (e.g., 2024-06-10T09:15:30Z), without any timezone information.
+              Use ZonedDateTime when you need to work with local times and timezones.
+              Use Instant for timestamps or when you only care about the absolute point in time (UTC).
+         ----------------------------------------------------------------------------------------------------------------------
+          ZonedDateTime.now().format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH))
+
+          Note: ZonedDateTime.now().format(...) uses the system's default timezone, so the date is not guaranteed to be in UTC.
+                So, we will convert the current ZonedDateTime to UTC timezone and formats it to match Twitter's date format
+        */
+
         String[] params = new String[]{
-                // ZonedDateTime.now().format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH)),
-                // The below code converts the current ZonedDateTime to UTC timezone and formats it to match Twitter's date format
                 ZonedDateTime.now()
-                        .withZoneSameInstant(ZoneId.of("UTC"))
-                        .format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH)),
+                             .withZoneSameInstant(ZoneId.of("UTC"))
+                             .format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH)),
                 // tweetID is a random long value
                 String.valueOf(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE)),
                 // tweet content is generated with random words and keywords

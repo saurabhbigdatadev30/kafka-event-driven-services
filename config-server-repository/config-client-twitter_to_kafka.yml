@@ -45,16 +45,41 @@ kafka-config:
 
 # This is the configuration for the Kafka producer.
 kafka-producer-config:
+  # Serializer/Deserializer (SerDes) settings
   key-serializer-class: org.apache.kafka.common.serialization.LongSerializer
   value-serializer-class: io.confluent.kafka.serializers.KafkaAvroSerializer
   compression-type: snappy
+  # The acks property sets the number of acknowledgments the producer requires have received before
+  # considering a request complete. The producer will wait for the full set of in-sync replicas to acknowledge the record.
+
+  # acks=0: The producer will not wait for any acknowledgment from the broker. This is the fastest option, but it also means that
+  #          messages may be lost if the broker goes down before the message is written to disk.
+  # acks=1: The producer will wait for the leader to acknowledge that it has received the message.
+  # acks=all: The producer will wait for all in-sync replicas to acknowledge that they have received the message.
   acks: all
+    # The enable-idempotence property ensures that the producer will not introduce duplicates when a retry occurs.
   enable-idempotence: true
+    # The max-in-flight-requests-per-connection property sets the maximum number of unacknowledged requests the
+    # producer will send on a single connection before blocking.
+  #   If 1, the producer will not send a new request until the previous request has been acknowledged.
+  #   If greater than 1, the producer can send multiple requests without waiting for the previous requests to be acknowledged.
+  # Note: If enable-idempotence is set to true, max-in-flight-requests-per-connection must be less than or equal to 5.
   max-in-flight-requests-per-connection: 5
+  # The batch-size Kafka producer property sets the maximum number of bytes to batch together before sending to a broker.
   batch-size: 16384
   batch-size-boost-factor: 100
+  # The linger-ms property sets the maximum time to buffer data before sending to a broker.
+  # With a value of 0, the producer will send data as soon as it is available.
+  # With a value greater than 0, the producer will wait up to the specified time for more data to arrive before sending.
   linger-ms: 5
+  # request-timeout-ms property sets the maximum amount of time the client will wait for the response of a request.
   request-timeout-ms: 60000
+  # retry-logic [retry-count +  retry-backoff-ms] for failed sends or delivery-timeout-ms
+    # retry-count: Number of retries for failed sends. Default is 2147483647 (Integer.MAX_VALUE)
+  # ****** The first record fails to be persisted in the broker, gets inserted in the second try, so this gets inserted after the .
+  # ******  records that naturally comes after it. To prevent this, we use max.in.flight.request.per .connection property and set it to 1
   retry-count: 5
   retry-backoff-ms: 1000
+#  The producer will wait up to 120 secs including the retries & then will throw TimeoutException
+#
  # delivery-timeout-ms: 120000
