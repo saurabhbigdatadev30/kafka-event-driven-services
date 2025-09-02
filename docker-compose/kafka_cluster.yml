@@ -22,6 +22,12 @@ services:
 # This is the schema registry service for Kafka.
 # It is used to manage schemas for Kafka topics.
 
+# Schema Registry is used to register a schema for a kafka topic, and it will check the producers and consumers each time,
+# to force them to use a registered schema so that only the allowed schema will be used. Producers and consumers check
+# schema with ID and cache the result before sending and receiving data. So it is actually a one time request to the
+# schema registry and then subsequent checks done by using cache. Schema Registry also allows backward and forward compatibility.
+# So schema can evolve without breaking changes.
+
   schema-registry:
     image: confluentinc/cp-schema-registry:${KAFKA_VERSION}
     hostname: schema-registry

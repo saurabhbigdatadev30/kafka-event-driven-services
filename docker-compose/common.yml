@@ -1,5 +1,12 @@
 version: '3.7'
+# A bridge network uses a software bridge which allows containers connected to the same bridge network to communicate while
+# preventing other containers to reach the network. Containers from different bridge networks can not communicate directly
+# with each other, since the bridge driver creates rules to prevent this communication.
 
+# If we don't set a bridge network, a default network will be created. And on the default bridge network,
+# containers can only access each other by IP addresses by default. But with a user defined bridge network, containers
+# can be resolved using hostnames, which is more handy to use instead of IP addresses, because IP has a dynamic structure
+# and can change in time.
 networks:
   application:
     driver: bridge

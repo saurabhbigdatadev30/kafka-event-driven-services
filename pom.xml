@@ -5,11 +5,12 @@
 	<modules>
 		<module>twitter-to-kafka-service</module>
 		<module>app-config-data</module>
-		<module>kafka</module>
-		<module>kafka/kafka-model</module>
-		<module>kafka/kafka-admin</module>
-		<module>kafka/kafka-producer</module>
-		<module>kafka/kafka-consumer</module>
+		<module>kafka</module> <!-- Parent module for all kafka related modules -->
+		<module>kafka/kafka-model</module>  <!-- Creates and hold Avro model class generated from the schema file -->
+		<module>kafka/kafka-admin</module>  <!-- Creates topic if not exists using AdminClient programatically with Retry Logic-->
+		<module>kafka/kafka-producer</module> <!-- Creates & configures KafkaTemplate -->
+		<module>kafka/kafka-consumer</module> <!-- Creates & configures KafkaListenerContainerFactory -->
+        <module>elastic/elastic-model</module> <!-- Creates & holds ElasticSearch model-->
 		<module>common-config</module>
 		<module>config-server</module>
 		<module>kafka-to-elastic-service</module>
