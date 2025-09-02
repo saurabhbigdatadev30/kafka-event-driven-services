@@ -11,7 +11,7 @@ import java.util.Map;
 
 /*
     KafkaAdminConfig is a configuration class that sets up an AdminClient bean for managing Kafka topics, consumer groups, etc.
-    It uses the KafkaConfigData to get the bootstrap servers for connecting to the Kafka cluster.
+    It reads from the KafkaConfigData to get the bootstrap servers for connecting to the Kafka cluster.
 
     The @EnableRetry annotation allows retrying operations in case of failures.
  */
@@ -26,8 +26,8 @@ public class KafkaAdminConfig {
     }
 
     /*
-        Creates an AdminClient bean that can be used to manage Kafka topics, consumer groups, etc.
-        The AdminClient is configured with the bootstrap servers from KafkaConfigData.
+         Creates AdminClient bean that can be used to manage Kafka topics, consumer groups, etc.
+         The AdminClient is configured with the bootstrap servers from KafkaConfigData.
 
      */
     @Bean

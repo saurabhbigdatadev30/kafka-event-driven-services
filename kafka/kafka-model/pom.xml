@@ -12,6 +12,7 @@
 
     <artifactId>kafka-model</artifactId>
 
+    <!-- This module generates the Avro Model class from the Avro schema file with extension as .avsc -->
     <dependencies>
         <dependency>
             <groupId>org.apache.avro</groupId>
@@ -21,8 +22,11 @@
 
 
     <!--
-    The avro-maven-plugin is used to create Java model class from the AvroSchema file . The schema file is stored with .avsc extension
-    kafka-model > mvn clean install  The avro maven plugin  creates the java model from the schema file
+    The avro-maven-plugin is used to create Java model class from the AvroSchema file .
+    The schema file is stored with .avsc  extension in the src/main/resources/avro folder.
+
+    kafka-model > mvn clean install  The avro maven plugin  creates the java model from the schema file.
+    The generated classes is placed in the src/main/java folder.
     -->
     <build>
         <plugins>

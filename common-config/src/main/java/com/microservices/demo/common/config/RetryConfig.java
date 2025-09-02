@@ -6,10 +6,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
-
+/*
+This class is responsible for creating the @Bean RetryTemplate,  used for retrying operations with exponential backoff.
+ We add module = app-config-data, which contains RetryConfigData . This is responsible to read the retry configurations
+ from the application.yml file.
+ */
 @Configuration
 public class RetryConfig {
-
 
     // We add module = app-config-data, which contains RetryConfigData . This is responsible to read the retry configurations
     private RetryConfigData retryConfigData;

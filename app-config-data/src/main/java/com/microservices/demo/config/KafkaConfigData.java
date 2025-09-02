@@ -11,17 +11,14 @@ The below @Configuration class = KafkaConfigData .
 This class reads the  configuration from the  file  = config-client-reactive_elastic_query.yml
 
 kafka-config:
-  topic-name: twitter-analytics-topic-2
-  topic-names-to-create:
-    - twitter-analytics-topic-2
-  num-partitions: 3
-  replication-factor: 3
   bootstrap-servers: localhost:19092, localhost:29092, localhost:39092
-  schema-registry-servers: http://localhost:8081
-  sleep-time-ms: 1000
-  max-interval-ms: 10000
-  retry-multiplier: 2.0
-  admin-retry-max: 1
+  schema-registry-url-key: schema.registry.url
+  schema-registry-url: http://localhost:8081
+  topic-name: twitter-topic
+  topic-names-to-create:
+    - twitter-topic
+  number-of-partitions: 3
+  replication-factor: 3
  */
 
 @Data
