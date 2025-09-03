@@ -28,17 +28,23 @@ import java.util.stream.Collectors;
 /*
 KafkaAdminClient is utility class defined in kafka-admin module which is responsible to create Topic .
 
-The kafka-admin module [KafkaAdminClient.java]   depends  on the other module classes
+The kafka-admin module [KafkaAdminClient.java]  depends  on the other module classes ,which we inject using CI
 
-(1) KafkaConfigData.java - @Configuration class defined in the app-config-data module which reads the Kafka configurations
-                            [prefix = "kafka-config"]  from the config-client-analytics.yml file
+  (1)RetryConfigData.java - @Configuration class created in [app-config-data] module which reads the retry configurations
 
-(2) RetryConfigData.java - @Configuration class defined in the app-config-data module which reads the Retry  configurations
-                            [prefix = "retry-config"] from the config-client-kafka_to_elastic.yml file
+  (2)RetryConfig.java - Creates @Bean RetryTemplate created in [common-config] module, reading configuration from RetryConfigData.java
 
-(3) AdminClient -          We instantiate this Bean in Configuration class KafkaAdminConfig
+  (3)KafkaConfigData.java -  @Configuration class defined in [app-config-data] module which reads the Kafka configurations
+                             (bootstrap servers,schema registry url, topic names to be created, no of partitions,replications)
 
-(4) RetryTemplate -        We instantiate this Bean in Configuration class RetryConfig in common-config module
+  (4)KafkaAdminConfig.java - In [kafka-admin] module, create @Bean AdminClient reading configurations from KafkaConfigData.java
+
+  (5) KafkaAdminClient.java - In the kafka-admin module , we create KafkaAdminClient which will inject the following beans
+        KafkaConfigData.java -
+        RetryConfigData.java -
+        AdminClient -
+        RetryTemplate - Created in [common-config] module **
+
 
  */
 @Component
@@ -60,7 +66,12 @@ public class KafkaAdminClient {
     private final AdminClient adminClient;
 
 
-    // RetryTemplate is configured in common-config module
+
+    /*
+         The RetryTemplate is supplied by Spring DI from a @Configuration class
+        (e.g. in the common-config module) that builds it using values from RetryConfigData.
+         KafkaAdminClient just receives it via constructor injection.
+  */
     private final RetryTemplate retryTemplate;
 
     private final WebClient webClient;
@@ -89,6 +100,9 @@ public class KafkaAdminClient {
         CreateTopicsResult createTopicsResult;
         try {
             // RetryTemplate execute method will retry the doCreateTopics method based on the retry policy defined in RetryConfigData
+            // Lambda form (explicit parameter) ******* Not required since we are using method reference
+            // CreateTopicsResult result2 = retryTemplate.execute(ctx -> doCreateTopics(ctx));
+            // Method reference form (implicit parameter)
             createTopicsResult = retryTemplate.execute(this::doCreateTopics);
             log.info("Create topic result {}", createTopicsResult.values().values());
         } catch (Throwable t) {
