@@ -99,9 +99,23 @@ public class KafkaAdminClient {
     public void createTopics() {
         CreateTopicsResult createTopicsResult;
         try {
-            // RetryTemplate execute method will retry the doCreateTopics method based on the retry policy defined in RetryConfigData
-            // Lambda form (explicit parameter) ******* Not required since we are using method reference
-            // CreateTopicsResult result2 = retryTemplate.execute(ctx -> doCreateTopics(ctx));
+            /*
+             ###  Method reference (implicit parameter passing) VS Lambda (explicit parameter passing) ###
+                  RetryTemplate execute method will retry the doCreateTopics method , passing the RetryContext as parameter
+                  until the max retry is reached or the method is successful
+
+                      (1) Lambda expression form (explicit parameter)
+                         CreateTopicsResult result1 = retryTemplate.execute(ctx -> {
+                                                                                     return doCreateTopics(ctx);
+                                                                                     });
+                                 VS
+
+                      (2) Method reference form (implicit parameter)
+                            CreateTopicsResult result2 = retryTemplate.execute(this::doCreateTopics);
+
+             */
+
+             CreateTopicsResult result2 = retryTemplate.execute(ctx -> doCreateTopics(ctx));
             // Method reference form (implicit parameter)
             createTopicsResult = retryTemplate.execute(this::doCreateTopics);
             log.info("Create topic result {}", createTopicsResult.values().values());
