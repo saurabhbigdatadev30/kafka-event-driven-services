@@ -115,7 +115,7 @@ public class KafkaAdminClient {
 
              */
 
-             CreateTopicsResult result2 = retryTemplate.execute(ctx -> doCreateTopics(ctx));
+             CreateTopicsResult result3 = retryTemplate.execute(ctx -> doCreateTopics(ctx));
             // Method reference form (implicit parameter)
             createTopicsResult = retryTemplate.execute(this::doCreateTopics);
             log.info("Create topic result {}", createTopicsResult.values().values());
