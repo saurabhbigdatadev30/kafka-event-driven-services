@@ -63,32 +63,32 @@ public class TwitterKafkaStreamRunner implements StreamRunner {
     /**
      --------------------------------------------------------------------------------------------------------------------------------------
      [1] Instantiate the TwitterStream using TwitterStreamFactory.
-                   twitterStream = new TwitterStreamFactory().getInstance();
+                    twitterStream = new TwitterStreamFactory().getInstance();
 
      Note:
      Ideally TwitterStreamFactory should be created as a @Bean in a Configuration class and should be injected here.
 
-     // [1] TwitterStreamConfig.java -- We create @Bean TwitterStream in a Configuration class [TwitterStreamConfig]
+     // [1] TwitterStreamConfig.java -- We create @Bean TwitterStream in a @Configuration class [TwitterStreamConfig] in app-config-data module
+          This will make the TwitterStream a singleton bean managed by application context and can be injected wherever needed.
 
           @Configuration
           public class TwitterStreamConfig {
-
-                  @Bean
-                  public TwitterStream twitterStream() {
-                  return new TwitterStreamFactory().getInstance();
-                  }
-
+             @Bean
+             public TwitterStream twitterStream() {
+             return new TwitterStreamFactory().getInstance();
              }
+          }
 
-            // [2] In the class TwitterKafkaStreamRunner.java -- We will inject the TwitterStream bean in the constructor injection
-                    instead of creating a new instance and use it in the start() method
-            public class TwitterKafkaStreamRunner
+          // [2] In the class TwitterKafkaStreamRunner.java -- We will inject the TwitterStream Bean in the constructor injection
+                 instead of creating a new instance and use it in the start() method
+
+          public class TwitterKafkaStreamRunner
+          {
+             private final TwitterStream twitterStream;  // Created as a @Bean in TwitterStreamConfig class
+
+             public TwitterKafkaStreamRunner(TwitterToKafkaServiceConfigData configData, TwitterKafkaStatusListener statusListener,
+                                             TwitterStream twitterStream)
                {
-                 private final TwitterStream twitterStream;
-
-                 public TwitterKafkaStreamRunner(TwitterToKafkaServiceConfigData configData,
-                                                 TwitterKafkaStatusListener statusListener,
-                                                 TwitterStream twitterStream) {
  -----------------------------------------------------------------------------------------------------------------------------------------------
 
      [2] Add  listener to the TwitterStream. This listener will handle the incoming tweets and other events.
@@ -97,6 +97,11 @@ public class TwitterKafkaStreamRunner implements StreamRunner {
      [3] Configure the filter with the keywords. This will start the stream and filter tweets based on the specified keywords.
                  FilterQuery filterQuery = new FilterQuery(keywords);
                  twitterStream.filter(filterQuery);
+     --------------------------------------------------------------------------------------------------------------------------------------
+     So, the start() method defined in th TwitterKAfkaStreamRunner (Implemetation-1] does the following:
+        1. Instantiates the TwitterStream using TwitterStreamFactory, which is used to connect to the Twitter API.
+        2. Adds the listener to the TwitterStream, which will handle the incoming tweets and other events.
+        3. Configures the filter with the keywords , add to the TwitterStream. to starts filtering the Twitter stream.
      */
      @Override
      public void start() throws TwitterException {
@@ -105,11 +110,15 @@ public class TwitterKafkaStreamRunner implements StreamRunner {
         // [1] Instantiate the TwitterStream using TwitterStreamFactory , should ideally be a @Bean
          // in a Configuration class and should be injected here.
         twitterStream = new TwitterStreamFactory().getInstance();
-        // [2] Add the listener to the TwitterStream , invokes the onStatus method of the listener when a new tweet is received
+        /*
+           [2] Add the listener to the TwitterStream ,this invokes the onStatus(Status status) method of the listener when
+               a new tweet is received from the Twitter stream & pass the tweet to the listener.
+           */
         twitterStream.addListener(twitterKafkaStatusListener);
         addFilter();
     }
 
+    // Will not work with Prototype scope
     @PreDestroy
     public void shutdown() {
         if (twitterStream != null) {
@@ -129,8 +138,9 @@ public class TwitterKafkaStreamRunner implements StreamRunner {
          // Create a FilterQuery with the keywords
          // The FilterQuery is used to filter tweets based on the specified keywords
          FilterQuery filterQuery = new FilterQuery(keywords);
-        // [3] Configure the filter with the keywords and start filtering the Twitter stream
-         // This will start the stream and filter tweets based on the specified keywords
+         /*[3] Configure the filter with the keywords and start filtering the Twitter stream
+              This will start the stream and filter tweets based on the specified keywords
+              */
         twitterStream.filter(filterQuery);
         //  LOG.info("Started filtering twitter stream for keywords {}", Arrays.toString(keywords));
         log.info("Started filtering twitter stream for keywords {}", Arrays.toString(keywords));

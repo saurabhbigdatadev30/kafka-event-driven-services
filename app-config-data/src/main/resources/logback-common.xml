@@ -1,29 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <included>
 
-
-    <!--
-
-      (1) logback and SLF4J dependencies  get added with the starter project =  [spring-boot-starter-web] .  So we add logback.xml in the resources
-
-      (2) We define 2 appender , writing log to console appender name="STDOUT  & writing log to file appender name="FILE"
-
-      (3) Define Pattern, to format the log message.  Understand the pattern of the log message
-          %d{yyyy-MM-dd HH:mm:ss} [%thread] [%X{traceId:-},%X{spanId:-}] %-5level %X{correlationID} %logger{36} - %msg%n
-
-          *** The log messages Pattern must shows
-               class name , threadID , time , correlationID , traceId
-
-     (4) Define the log level
-              trace < debug < info < warn < error
-
-            If we set the log level to debug, then log of type (debug, info , warn & error gets logged)
-            If we set the log level to info, then log of type (info , warn & error gets logged)
-
-    -->
-
-
-
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
             <Pattern>
@@ -63,16 +40,6 @@
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
     </appender>
 
-
-    <!--
-    We  match the appender to  package = com.microservices.demo. This means that the 2 appender, defined here,  to all classes that starts
-     with com.microservices.demo package will be logged by using those two appender
-
-     Log all the classes which is part of the package = com.microservices.demo
-     level = trace, debug, info, warn, error
-     In trace -> We log all the logs, which includes trace, debug, info, warn and error
-     In info -> We log all the logs, which includes info, warn and error, debug and trace will not be logged
-    -->
     <logger name="com.microservices.demo" level="info" additivity="false">
         <appender-ref ref="FILE"/>
         <appender-ref ref="STDOUT"/>

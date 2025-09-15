@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 
@@ -50,28 +51,28 @@ public class TwitterV2KafkaStreamRunner implements StreamRunner {
         if (null != bearerToken) {
             try {
                 // twitterV2StreamHelper.setupRules(bearerToken, getRules());
+                 /*
 
-                /*
-                   ## Lambda Expression : Java 8 Feature Key Points
-                   The advantage of using a lambda expression here is that it allows for more flexibility and reusability.
-                   By passing a Supplier<Map<String, String>> as argument to the setupRulesModified method, we can easily change the way
-                   rules are generated without modifying the method itself.
+    ------------------------------------------------------------------------------------------------------------------------------------------------
+     #  Defining Higher Order Function in Java using Functional Interface
+          The setupRulesModified() method is Higher order function , takes a Supplier functional interface as parameter.
+          The Supplier functional interface is implemented using a method reference to the [getRules] method.
 
-                    The signature of the method [setupRulesModified] remains the same, but the logic for generating the rules
-                    can be changed by passing different lambda expressions.
-                    This allows for better separation of concerns, as the method is only responsible for
-                    setting up the rules . This makes the code more modular and easier to maintain.
-                    Additionally, using a lambda expression can make the code more concise and easier to read, especially
-                    when the logic for generating the rules is simple and can be expressed in a single line.
-                 */
-                twitterV2StreamHelper.setupRulesModified(bearerToken, () -> {
-                    Map<String, String> rules = new HashMap<>();
-                    rules.put("cats has:images", "cat images");
-                    rules.put("dogs has:images", "dog images");
-                    return rules;
-                });
+            # Advantages of using Higher Order Function ,  Supplier functional interface:
 
-                // Connect to the Twitter V2 stream API , start streaming tweets based on defined rules & send this to Kafka
+                    (1) This allows for lazy evaluation of the rules, meaning the rules are only generated when needed.
+
+                    (2) This is useful in scenarios where the rules  change frequently . The setupRulesModified() method is not dependent
+                        on the implementation of the getRules() method. The method setupRulesModified() calls the get() method of the
+                        Supplier interface to get the latest rules and continues .
+
+                    (3) This approach enhances modularity and separation of concerns, as the logic for generating rules is encapsulated
+        --------------------------------------------------------------------------------------------------------------------------------------------------
+                */
+
+                twitterV2StreamHelper.setupRulesModified(bearerToken, this::getRules);
+
+                // Connect to the Twitter V2 stream API , fetch continues stream of tweets  & send to Kafka Topic.
                 twitterV2StreamHelper.connectStream(bearerToken);
             } catch (IOException | URISyntaxException | TwitterException | JSONException e) {
                 LOG.error("Error streaming tweets in V2 API!", e);
@@ -85,16 +86,17 @@ public class TwitterV2KafkaStreamRunner implements StreamRunner {
         }
     }
 
-
-
-    // This method creates a map of rules for filtering tweets based on keywords.
-    private Map<String, String> getRules() {
+    // This method creates a map of rules for filtering tweets based on keywords which we read from the config file .
+    private Map<String,String> getRules() {
         List<String> keywords = twitterToKafkaServiceConfigData.getTwitterKeywords();
-      var rulesMap =   keywords.stream().collect(Collectors.toMap(
+        // Convert List to Map , Map<"Java", "Keyword: Java">
+        var rulesMap =   keywords.stream().collect(Collectors.toMap(
                 keyword -> keyword,
                 keyword -> "Keyword: " + keyword
         ));
         LOG.info("Created filter for twitter stream for keywords {}", keywords.toArray());
         return rulesMap;
     }
+
+
 }

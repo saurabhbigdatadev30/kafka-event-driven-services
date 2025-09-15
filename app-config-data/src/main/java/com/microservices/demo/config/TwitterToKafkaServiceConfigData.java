@@ -6,11 +6,14 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
-
 /*
-Reads the  configuration from the  file  = config-client-twitter_to_kafka.yml
+(1)Reads the configuration from the  file  = config-client-twitter_to_kafka.yml.
+
+Usage of the @Configuration class  & @ConfigurationProperties
+(2) We will create a @Configuration class  with @ConfigurationProperties to read "twitter-to-kafka-service" section from the YAML file.
 
 twitter-to-kafka-service:
+ # get the tweets from Twitter related with these keywords
   twitter-keywords:
     - Java
     - Microservices
@@ -28,19 +31,18 @@ twitter-to-kafka-service:
   mock-sleep-ms: 10000
  */
 
-
 @Data
 @Configuration
 @ConfigurationProperties(prefix = "twitter-to-kafka-service")
 public class TwitterToKafkaServiceConfigData {
-    private List<String> twitterKeywords;    // =>  twitter-keywords
-    private String welcomeMessage;           // =>  welcome-message
-    private Boolean enableMockTweets;        // =>  enable-mock-tweets
-    private Long mockSleepMs;               //  =>  mock-sleep-ms
-    private Integer mockMinTweetLength;     //  =>  mock-min-tweet-length
-    private Integer mockMaxTweetLength;    //   =>  mock-max-tweet-length
-    private String twitterV2BaseUrl;      //   =>  twitter-v2-base-url
-    private String twitterV2RulesBaseUrl; //   =>  twitter-v2-rules-base-url
+    private List<String> twitterKeywords;    //   maps with  => twitter-keywords
+    private String welcomeMessage;           //   maps with  => welcome-message
+    private Boolean enableMockTweets;        //   maps with  => enable-mock-tweets
+    private Long mockSleepMs;               //    maps with  => mock-sleep-ms
+    private Integer mockMinTweetLength;     //    maps with  => mock-min-tweet-length
+    private Integer mockMaxTweetLength;    //     maps with  => mock-max-tweet-length [mockMaxTweetLength]
+    private String twitterV2BaseUrl;      //      maps with  => twitter-v2-base-url [twitterV2BaseUrl]
+    private String twitterV2RulesBaseUrl; //      maps with  => twitter-v2-rules-base-url [twitterV2RulesBaseUrl]
     // Reads from Environment Variable
     private String twitterV2BearerToken; //   Reads from config-client-twitter_to_kafka.yml twitter-v2-bearer-token
 }

@@ -31,13 +31,15 @@
         <!--
              The kafka-admin module uses AdminClient with RetryTemplate to create topic & check topics - see KafkaAdminClientConfig class.
              Here we need retry logic, because when we start everything together including Kafka cluster and the services,
-             we might need to wait until Kafka cluster healthy and ready to create topics and returning list of topics.
+             We might need to wait until Kafka cluster healthy and ready to create topics and returning list of topics.
              Spring, AOP and specifically spring retry template is a perfect candidate to use in this scenario.
 
-            We create  separate module common-config module that defines Retry mechanism . This module creates  RetryTemplate @Bean configuration .
+              We create  separate module common-config module that defines Retry mechanism . This module creates  RetryTemplate
+              @Bean configuration .
 
-           We  add common-config module as dependency in kafka-admin module.
-           kafka-admin module => common-config module (creates @Bean [RetryTemplate]  => app-config-data module (contains the configuration classes).
+              We  add common-config module as dependency in kafka-admin module.
+              kafka-admin module => common-config module (creates @Bean [RetryTemplate]  => app-config-data module
+               (contains the configuration classes).
             -->
         <dependency>
             <groupId>com.microservices.demo</groupId>

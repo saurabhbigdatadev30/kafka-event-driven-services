@@ -41,6 +41,13 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>microservices-demo</name>
 	<description>Microservices demo project for Spring Boot</description>
+    <!--
+      The packaging should be pom , not jar since this is Base maven module.
+      If we use jar packaging here, then while building the parent module it will
+      create microservices-demo-0.0.1-SNAPSHOT.jar file in the target folder which is not required.
+      We just need microservices-demo-0.0.1-SNAPSHOT.pom file in the target folder.
+      Since this is parent module and not a runnable module.
+         -->
 	<packaging>pom</packaging>
 
 	<properties>
@@ -77,8 +84,8 @@
 
 	</properties>
 
-	<!--
-	  The repository is located at confluent repository, not in Maven Central Repository. -->
+    <!--
+      The repository is located at confluent repository, not in Maven Central Repository. -->
 
 	<repositories>
 		<repository>
@@ -418,31 +425,38 @@
 	</dependencyManagement>
 
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>${maven-compiler-plugin.version}</version>
-				<configuration>
-					<release>17</release>
-				</configuration>
-			</plugin>
-		</plugins>
-		<pluginManagement>
-			<plugins>
-				<!-- Spring Boot Maven Plugin is responsible to creates executable jar file with all the all application
-				      dependencies and can run with  java -jar cmd
-				     Starts the spring-boot application before running the Integration tests
-				     Also can create docker image with spring-boot:build-image command
-				 -->
-				<plugin>
-					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-maven-plugin</artifactId>
-					<version>${spring-boot.version}</version>
-				</plugin>
-			</plugins>
-		</pluginManagement>
-	</build>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <!--
+                    The source and target is set to 17 as we are using Java 17 version,using the configuration
+                    in the maven-compiler-plugin. The <source> and <target> is replaced with
+                     <release> in maven-compiler-plugin
+                 -->
+                <configuration>
+                    <release>17</release>
+                </configuration>
+            </plugin>
+        </plugins>
+        <pluginManagement>
+            <plugins>
+                <!-- Spring Boot Maven Plugin is responsible to creates executable jar file with all the all application
+                      dependencies and can run with  java -jar cmd.
+
+                     Starts the spring-boot application prior to the  running of the Integration tests
+                     Also can create docker image with spring-boot:build-image command
+                 -->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring-boot.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 
 </project>

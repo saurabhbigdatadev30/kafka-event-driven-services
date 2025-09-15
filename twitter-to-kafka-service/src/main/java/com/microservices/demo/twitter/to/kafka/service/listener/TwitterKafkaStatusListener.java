@@ -15,15 +15,18 @@ import twitter4j.StatusAdapter;
 
 
 /*
-     This class extends StatusAdapter & overrides the onStatus method.
-     onStatus method --> When a new status is received, it transforms the status into an Avro model
-     and publishes it to a Kafka topic.
-     This class has dependencies to KafkaProducer , app-config-data  and KafkaModel modules
+     (1) public class TwitterKafkaStatusListener extends StatusAdapter & overrides the onStatus() method.
+
+     (2) onStatus method --> When a new status/tweet is received, it transforms the tweet object into an Avro model
+         and publishes it to a Kafka topic. The tweet object  is transformed into TwitterAvroModel (value) & the key is userId of the tweet ,
+         we send  KafkaProducer<Long,TwitterAvroModel>
+
+     Has dependencies to KafkaProducer  , app-config-data  and KafkaModel modules
  */
 public class TwitterKafkaStatusListener extends StatusAdapter {
-    // Dependencies: app-config-data module,
+    // Dependencies: app-config-data module    ->  To read the topic name where the message to be published.
     private final KafkaConfigData kafkaConfigData;
-   // Dependencies:  kafka-producer module,
+   // Dependencies:  kafka-producer module     ->  To send the message to Kafka topic ,  KafkaProducer<Long,TwitterAvroModel>.
     private final KafkaProducer<Long, TwitterAvroModel> kafkaProducer;
 
     private final TwitterStatusToAvroTransformer twitterStatusToAvroTransformer;

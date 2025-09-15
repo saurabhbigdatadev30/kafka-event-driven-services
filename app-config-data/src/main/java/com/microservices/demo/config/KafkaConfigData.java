@@ -12,13 +12,13 @@ This class reads the  configuration from the  file  = config-client-reactive_ela
 
 kafka-config:
   bootstrap-servers: localhost:19092, localhost:29092, localhost:39092
-  schema-registry-url-key: schema.registry.url
-  schema-registry-url: http://localhost:8081
-  topic-name: twitter-topic
-  topic-names-to-create:
+  schema-registry-url-key: schema.registry.url                     => schemaRegistryUrlKey (schema-registry-url-key:)
+  schema-registry-url: http://localhost:8081                       => schemaRegistryUrl    (schema-registry-url:)
+  topic-name: twitter-topic                                        => topicName
+  topic-names-to-create:                                           => topicNamesToCreate   (topic-names-to-create:)
     - twitter-topic
-  number-of-partitions: 3
-  replication-factor: 3
+  number-of-partitions: 3                                           => numOfPartitions
+  replication-factor: 3                                             => replicationFactor
  */
 
 @Data
