@@ -3,21 +3,22 @@ package com.microservices.demo.twitter.to.kafka.service.init.impl;
 import com.microservices.demo.config.KafkaConfigData;
 import com.microservices.demo.kafka.admin.client.KafkaAdminClient;
 import com.microservices.demo.twitter.to.kafka.service.init.StreamInitializer;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
+@Slf4j
 @Component
 public class KafkaStreamInitializer implements StreamInitializer {
 
-    private static final Logger LOG = LoggerFactory.getLogger(KafkaStreamInitializer.class);
+    // private static final Logger LOG = LoggerFactory.getLogger(KafkaStreamInitializer.class);
 
     /*
      In the twitter-to-kafka-service Module we add the modules
-      Add module = app-config-data
-      Add module = kafka-admin . The kafka-admin module adds the common-config module
-       To read Topic Name , Partitions ... We add the app-config-data module here , since this will contain all the classes i.e @Configurations = KafkaConfigData
-       that is responsible to read the kafka-config properties
+      1. Add module = app-config-data
+      2. Add module = kafka-admin . The kafka-admin module adds the common-config module , to read Topic Name , Partitions ...
+      3. We add the app-config-data module here , since this will contain all the classes i.e @Configurations = KafkaConfigData
+         that is responsible to read the kafka-config properties
 
      */
     private final KafkaConfigData kafkaConfigData;
@@ -35,6 +36,7 @@ public class KafkaStreamInitializer implements StreamInitializer {
         // We create Kafka topic using KafkaAdmin
         kafkaAdminClient.createTopics();
         kafkaAdminClient.checkSchemaRegistry();
-        LOG.info("Topics with name {} is ready for operations!", kafkaConfigData.getTopicNamesToCreate().toArray());
+      //  LOG.info("Topics with name {} is ready for operations!", kafkaConfigData.getTopicNamesToCreate().toArray());
+          log.info("Topics with name {} is ready for operations!", kafkaConfigData.getTopicNamesToCreate().toArray());
     }
 }

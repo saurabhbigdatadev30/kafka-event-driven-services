@@ -10,11 +10,14 @@ twitter-to-kafka-service:
     - Kafka
     - Elasticsearch
   welcome-message: Hello microservices!
-  # Enable the Twitter - mock implementation of the StreamRunner . Of the 3 implementations (Mock, Twitter 4J , V2 API) only one can be enabled at a time.
+  # Of the 3 implementations (Mock, Twitter 4J , Twitter V2 API) we enable one at runtime based on the value of these properties.
+  # Enable the Twitter - mock implementation of the StreamRunner .
   enable-v2-tweets: false
   enable-mock-tweets: true
-  twitter-v2-base-url: https://api.twitter.com/2/tweets/search/stream?tweet.fields=created_at&expansions=author_id  # twitterV2BaseUrl in TwitterToKafkaService.java
-  twitter-v2-rules-base-url: https://api.twitter.com/2/tweets/search/stream/rules # twitterV2RulesBaseUrl in TwitterToKafkaService.java
+  twitter-v2-base-url: https://api.x.com/2/tweets/search/stream?tweet.fields=created_at&expansions=author_id
+  # twitter-v2-base-url: https://api.twitter.com/2/tweets/search/stream?tweet.fields=created_at&expansions=author_id
+  # twitterV2RulesBaseUrl in the config class.
+  twitter-v2-rules-base-url: https://api.x.com/2/tweets/search/stream/rules
   # Twitter API Bearer Token reads from environment variable
   twitter-v2-bearer-token: ${TWITTER_BEARER_TOKEN}  # twitterV2BearerToken in TwitterToKafkaService.java
   mock-min-tweet-length: 5  # mockMinTweetLength in TwitterToKafkaService.java

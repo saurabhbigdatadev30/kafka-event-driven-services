@@ -17,9 +17,10 @@ import org.json.JSONObject;
 import java.io.*;
 import java.net.URISyntaxException;
 import java.util.*;
-import java.util.function.Supplier;
+
 /*
  * Sample code to demonstrate the use of the Filtered Stream endpoint
+  https://github.com/xdevplatform/samples/blob/main/java/streams/FilteredStreamDemo.java
  * */
 public class FilteredStreamDemo {
     // To set your enviornment variables in your terminal run the following line:
@@ -31,15 +32,7 @@ public class FilteredStreamDemo {
             Map<String, String> rules = new HashMap<>();
             rules.put("cats has:images", "cat images");
             rules.put("dogs has:images", "dog images");
-            // setupRules(bearerToken, rules);
-            // We define Higer-Order function to setup rules dynamically and pass it to the method
-            // that sets up the rules before streaming
-            setupRulesModified(bearerToken, () -> {
-                Map<String, String> rules1 = new HashMap<>();
-                rules1.put("cats has:images", "cat images");
-                rules1.put("dogs has:images", "dog images");
-                return rules;
-            });
+            setupRules(bearerToken, rules);
             connectStream(bearerToken);
         } else {
             System.out.println("There was a problem getting your bearer token. Please make sure you set the BEARER_TOKEN environment variable");
@@ -50,39 +43,29 @@ public class FilteredStreamDemo {
      * This method calls the filtered stream endpoint and streams Tweets from it
      * */
     private static void connectStream(String bearerToken) throws IOException, URISyntaxException {
-
+      // 1. Create a HttpClient.
         HttpClient httpClient = HttpClients.custom()
                 .setDefaultRequestConfig(RequestConfig.custom()
-                        .setCookieSpec(CookieSpecs.STANDARD).build())
+                .setCookieSpec(CookieSpecs.STANDARD).build())
                 .build();
 
-        URIBuilder uriBuilder = new URIBuilder("https://api.twitter.com/2/tweets/search/stream");
-
+        URIBuilder uriBuilder = new URIBuilder("https://api.x.com/2/tweets/search/stream");
+      // 2. Create a HttpGet request with the URI and set the Authorization header with the Bearer Token.
         HttpGet httpGet = new HttpGet(uriBuilder.build());
         httpGet.setHeader("Authorization", String.format("Bearer %s", bearerToken));
 
+        // 3. Execute the request and get the response. The response will be a stream of Tweets that match the rules you set up.
         HttpResponse response = httpClient.execute(httpGet);
-        // We get continuous response from the stream endpoint based on the rules we set , so we need to use a BufferedReader to read the stream.
         HttpEntity entity = response.getEntity();
         if (null != entity) {
             BufferedReader reader = new BufferedReader(new InputStreamReader((entity.getContent())));
-            String tweetData = reader.readLine();
-            // The stream will be kept open. To test this, we can set up a rule to get tweets with "cats" or "dogs" and then tweet something with these words
-            while (tweetData != null) {
-                System.out.println(tweetData);
-                tweetData = reader.readLine();
+            String line = reader.readLine();
+            while (line != null) {
+                System.out.println(line);
+                line = reader.readLine();
             }
         }
 
-    }
-    private static void setupRulesModified(String bearerToken, Supplier<Map<String, String>> rulesSupplier)
-            throws IOException, URISyntaxException {
-        Map<String, String> rules = rulesSupplier.get();
-        List<String> existingRules = getRules(bearerToken);
-        if (existingRules.size() > 0) {
-            deleteRules(bearerToken, existingRules);
-        }
-        createRules(bearerToken, rules);
     }
 
     /*
@@ -101,11 +84,11 @@ public class FilteredStreamDemo {
      * */
     private static void createRules(String bearerToken, Map<String, String> rules) throws URISyntaxException, IOException {
         HttpClient httpClient = HttpClients.custom()
-                 .setDefaultRequestConfig(RequestConfig.custom()
-                 .setCookieSpec(CookieSpecs.STANDARD).build())
-                 .build();
+                .setDefaultRequestConfig(RequestConfig.custom()
+                        .setCookieSpec(CookieSpecs.STANDARD).build())
+                .build();
 
-        URIBuilder uriBuilder = new URIBuilder("https://api.twitter.com/2/tweets/search/stream/rules");
+        URIBuilder uriBuilder = new URIBuilder("https://api.x.com/2/tweets/search/stream/rules");
 
         HttpPost httpPost = new HttpPost(uriBuilder.build());
         httpPost.setHeader("Authorization", String.format("Bearer %s", bearerToken));
@@ -129,7 +112,7 @@ public class FilteredStreamDemo {
                         .setCookieSpec(CookieSpecs.STANDARD).build())
                 .build();
 
-        URIBuilder uriBuilder = new URIBuilder("https://api.twitter.com/2/tweets/search/stream/rules");
+        URIBuilder uriBuilder = new URIBuilder("https://api.x.com/2/tweets/search/stream/rules");
 
         HttpGet httpGet = new HttpGet(uriBuilder.build());
         httpGet.setHeader("Authorization", String.format("Bearer %s", bearerToken));
@@ -158,7 +141,7 @@ public class FilteredStreamDemo {
                         .setCookieSpec(CookieSpecs.STANDARD).build())
                 .build();
 
-        URIBuilder uriBuilder = new URIBuilder("https://api.twitter.com/2/tweets/search/stream/rules");
+        URIBuilder uriBuilder = new URIBuilder("https://api.x.com/2/tweets/search/stream/rules");
 
         HttpPost httpPost = new HttpPost(uriBuilder.build());
         httpPost.setHeader("Authorization", String.format("Bearer %s", bearerToken));

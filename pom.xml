@@ -10,7 +10,8 @@
 		<module>kafka/kafka-admin</module>  <!-- Creates topic if not exists using AdminClient programatically with Retry Logic-->
 		<module>kafka/kafka-producer</module> <!-- Creates & configures KafkaTemplate -->
 		<module>kafka/kafka-consumer</module> <!-- Creates & configures KafkaListenerContainerFactory -->
-        <module>elastic/elastic-model</module> <!-- Creates & holds ElasticSearch model-->
+       <!-- **** Suggested by claude  since this is giving issue-->
+      <!--  <module>elastic/elastic-model</module>--> <!-- Creates & holds ElasticSearch model-->
 		<module>common-config</module>
 		<module>config-server</module>
 		<module>kafka-to-elastic-service</module>
@@ -436,6 +437,10 @@
                     The source and target is set to 17 as we are using Java 17 version,using the configuration
                     in the maven-compiler-plugin. The <source> and <target> is replaced with
                      <release> in maven-compiler-plugin
+                     <configuration>
+                     <source>17</source>
+                      <target>17</target>
+                        </configuration>
                  -->
                 <configuration>
                     <release>17</release>

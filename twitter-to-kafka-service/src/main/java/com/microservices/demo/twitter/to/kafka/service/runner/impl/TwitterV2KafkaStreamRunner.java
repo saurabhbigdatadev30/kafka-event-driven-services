@@ -50,26 +50,6 @@ public class TwitterV2KafkaStreamRunner implements StreamRunner {
         String bearerToken = twitterToKafkaServiceConfigData.getTwitterV2BearerToken();
         if (null != bearerToken) {
             try {
-                // twitterV2StreamHelper.setupRules(bearerToken, getRules());
-                 /*
-
-    ------------------------------------------------------------------------------------------------------------------------------------------------
-     #  Defining Higher Order Function in Java using Functional Interface
-          The setupRulesModified() method is Higher order function , takes a Supplier functional interface as parameter.
-          The Supplier functional interface is implemented using a method reference to the [getRules] method.
-
-            # Advantages of using Higher Order Function ,  Supplier functional interface:
-
-                    (1) This allows for lazy evaluation of the rules, meaning the rules are only generated when needed.
-
-                    (2) This is useful in scenarios where the rules  change frequently . The setupRulesModified() method is not dependent
-                        on the implementation of the getRules() method. The method setupRulesModified() calls the get() method of the
-                        Supplier interface to get the latest rules and continues .
-
-                    (3) This approach enhances modularity and separation of concerns, as the logic for generating rules is encapsulated
-        --------------------------------------------------------------------------------------------------------------------------------------------------
-                */
-
                 twitterV2StreamHelper.setupRulesModified(bearerToken, this::getRules);
 
                 // Connect to the Twitter V2 stream API , fetch continues stream of tweets  & send to Kafka Topic.

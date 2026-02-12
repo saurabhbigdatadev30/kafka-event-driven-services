@@ -12,11 +12,10 @@
     <artifactId>twitter-to-kafka-service</artifactId>
 
     <!--
-      List of dependencies that will be used in the [twitter-to-kafka-service] module
+      List of dependencies/modules that will be used in the [twitter-to-kafka-service] module
           (1) [app-config-data] module is used to read the configurations from the Spring Cloud Config Server.
           (2) [kafka-admin] module is used to create the topics with RetryLogic if it is not already created.
           (3) [kafka-producer] module is used to send the event (Twitter event) to a kafka topic using KafkaTemplate.
-
 
      Spring Boot dependencies
           (4) spring-boot-starter is used for core spring boot functionality.
@@ -24,11 +23,10 @@
           (6) spring-boot-starter-security is used to secure the application using basic authentication.
           (7) spring-boot-starter-test is used for testing the application.
 
-
       Other dependencies
             (8) lombok is used to reduce boilerplate code in Java classes. Defined with provided scope to avoid including it in the final artifact.
             (9) junit-jupiter-api is used to write unit tests.
-            (10) twitter4j-stream is used to interact with the Twitter Streaming   API i.e Streaming tweets in real-time.
+            (10) twitter4j-stream is used to interact with the Twitter Streaming API i.e Streaming tweets in real-time.
             (11) httpclient is used to make HTTP requests to the Twitter API.
             (12) json is used to parse JSON responses from the Twitter API.
 
@@ -71,6 +69,7 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!--Twitter 4J Dependency get the streaming data from Twitter  -->
         <dependency>
             <groupId>org.twitter4j</groupId>
             <artifactId>twitter4j-stream</artifactId>
