@@ -26,7 +26,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Component
 @Slf4j
 /*
-  @ConditionalOnProperty(name = "twitter-to-kafka-service.enable-mock-tweets", havingValue = "true")
+   @ConditionalOnProperty(name = "twitter-to-kafka-service.enable-mock-tweets", havingValue = "true")
    MockKafkaStreamRunner is only enabled when enable-mock-tweets is true and enable-v2-tweets is false.
    This is to ensure that only one StreamRunner implementation is active at a time.
  */
@@ -89,7 +89,7 @@ public class MockKafkaStreamRunner implements StreamRunner {
          */
     private static final String TWITTER_STATUS_DATE_FORMAT = "EEE MMM dd HH:mm:ss zzz yyyy";
 
-    /*
+    /**
     + Constructor-based Dependency Injection
           Manually writing the constructor is better than using the  @AllArgsConstructor annotation.
           The lombok annotation @AllArgsConstructor will include all fields (including constants and parameters we don't want injected).
@@ -116,13 +116,14 @@ public class MockKafkaStreamRunner implements StreamRunner {
 
 /*
   simulateTwitterStream() method generates tweets with random content in infinite loop ,with random length between min and max tweet length.
-  We don't want to block the main thread, so we use a ExecutoService --> SingleThreadExecutor to simulate the twitter stream.
+  We don't want to block the main thread, so we use a ExecutorService --> SingleThreadExecutor to simulate the twitter stream.
   submit() method is used to run the tweet simulation in a separate thread implementing Functional Interface Runnable.
  */
 
     private void simulateTwitterStream(String[] keywords, int minTweetLength, int maxTweetLength, long sleepTimeMs) {
         // () -> { code to run }  ->  Lambda expression implementing Runnable interface
-        Executors.newSingleThreadExecutor().submit(() -> {
+        Executors.newSingleThreadExecutor().submit(() ->
+        {
             // Lambda expression to run the tweet simulation in a separate thread implementing Runnable
             try {
                 log.info("Thread {} started for simulating twitter stream", Thread.currentThread().getName());
@@ -199,14 +200,32 @@ public class MockKafkaStreamRunner implements StreamRunner {
         return tweet;
     }
 
+
     private String getRandomTweetContent(String[] keywords, int minTweetLength, int maxTweetLength) {
-        StringBuilder tweet = new StringBuilder();
-        // Generate a random tweet length between minTweetLength and maxTweetLength
         int tweetLength = RANDOM.nextInt(maxTweetLength - minTweetLength + 1) + minTweetLength;
-        return constructRandomTweet(keywords, tweet, tweetLength);
+        StringBuilder tweet = new StringBuilder();
+
+        // Add random words
+        for (int i = 0; i < tweetLength; i++) {
+            tweet.append(WORDS[RANDOM.nextInt(WORDS.length)]).append(" ");
+        }
+
+        // Insert a random keyword at the end
+        tweet.append(keywords[RANDOM.nextInt(keywords.length)]);
+
+        return tweet.toString().trim();
     }
 
-    private String constructRandomTweet(String[] keywords, StringBuilder tweet, int tweetLength) {
+
+    // The method is complex and we are not using this logic
+    private String getRandomTweetContentLegacy(String[] keywords, int minTweetLength, int maxTweetLength) {
+        // Generate a random tweet length between minTweetLength and maxTweetLength
+        int tweetLength = RANDOM.nextInt(maxTweetLength - minTweetLength + 1) + minTweetLength;
+        return constructRandomTweet(keywords, tweetLength);
+    }
+
+    private String constructRandomTweet(String[] keywords , int tweetLength) {
+        StringBuilder tweet = new StringBuilder();
         for (int i = 0; i < tweetLength; i++) {
             tweet.append(WORDS[RANDOM.nextInt(WORDS.length)]).append(" ");
             if (i == tweetLength / 2) {
