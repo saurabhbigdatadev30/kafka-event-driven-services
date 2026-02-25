@@ -13,8 +13,8 @@
 
     <!--
          This module reads the configuration from the Spring Cloud Config Server.
-         spring-boot dependency is added as dependency,  to add @Configuration and @ConfigurationProperties in the config classes in this module.
-         We also define the @Lombok Data annotation to avoid boilerplate code  - getters and setters in the config classes.
+         spring-boot dependency is added as dependency,  to add @Configuration and @ConfigurationProperties in the config classes in
+         this module. We also define the @Lombok Data annotation to avoid boilerplate code  - getters and setters in the config classes.
 
          Other modules / services  will use this module as dependency to read the configuration .
          For this we add this module as dependency in other modules / services pom.xml file

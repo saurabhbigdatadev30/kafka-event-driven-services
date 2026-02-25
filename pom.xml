@@ -10,7 +10,7 @@
 		<module>kafka/kafka-admin</module>  <!-- Creates topic if not exists using AdminClient programatically with Retry Logic-->
 		<module>kafka/kafka-producer</module> <!-- Creates & configures KafkaTemplate -->
 		<module>kafka/kafka-consumer</module> <!-- Creates & configures KafkaListenerContainerFactory -->
-       <!-- **** Suggested by claude  since this is giving issue-->
+       <!-- **** Suggested by claude  since this is giving error while building-->
       <!--  <module>elastic/elastic-model</module>--> <!-- Creates & holds ElasticSearch model-->
 		<module>common-config</module>
 		<module>config-server</module>
@@ -275,8 +275,8 @@
 			</dependency>
 
 			<!-- We need retry logic .
-			     When we start everything together i.e kafka cluster & the services .. services might need to wait for the Kafka Cluster to be healthy
-                 and is ready to create topic & returning list of topics
+			     When we start everything together i.e kafka cluster & the services .. services might need to wait for the Kafka Cluster
+			     to be healthy and is ready to create topic & returning list of topics
 			 -->
 			<dependency>
 				<groupId>org.springframework.retry</groupId>

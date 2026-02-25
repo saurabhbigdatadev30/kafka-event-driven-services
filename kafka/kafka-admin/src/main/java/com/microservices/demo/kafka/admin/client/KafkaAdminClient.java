@@ -47,26 +47,43 @@ public class KafkaAdminClient {
 
   //  private static final Logger LOG = LoggerFactory.getLogger(KafkaAdminClient.class);
 
-    // The KafkaConfigData is a Configuration class that includes from  Module =  app-config-data
+    // The KafkaConfigData is a Configuration class that includes from  Module =  app-config-data module
     private final KafkaConfigData kafkaConfigData;
 
     // The RetryConfigData is a Configuration class that includes from  Module =  app-config-data module
     private final RetryConfigData retryConfigData;
 
-    /*
-      The  @Configuration class = KafkaAdminConfig , creates  @Bean --> public AdminClient adminClient().
-      This  AdminClient will then be injected using the CI
+    /**
+
     */
     private final AdminClient adminClient;
 
+   /**
+    1. The @Configuration class = RetryConfig defined in common-config module & is responsible to create @Bean - RetryTemplate.
+    2. The RetryTemplate is configured with the Retry policies defined in RetryConfigData, defined in app-config-data module.
+    3. So , the app-config-data module [RetryConfigData] is added as dependency in the common-config module to read the
+       retry configurations from the config-client-twitter-to-kafka.yml file and build the RetryTemplate Bean in the common-config module.
+    4. The kafka-admin module , KafkaAdminClient class is responsible to create topics in Kafka Broker, and it uses
+       the RetryTemplate Bean defined in the common-config module to retry the topic creation operation if it fails.
+    5. We add dependency of module = app-config-data .. in module =  common-config module , which contains RetryConfigData . This is
+       responsible to read the retry configurations.
 
-    /*
-      The RetryTemplate is supplied by Spring DI from a @Configuration class (e.g. in the common-config module)
-      that builds it using values from RetryConfigData. KafkaAdminClient just receives it via constructor injection
-     */
-    private final RetryTemplate retryTemplate;
+        @Configuration
+        public class RetryConfig {
+        // Defined in the module = app-config-data , reads the retry configurations from the config-client-twitter-to-kafka.yml file
+        private RetryConfigData retryConfigData;
 
-    private final WebClient webClient;
+          @Bean
+          public RetryTemplate retryTemplate() {
+            RetryTemplate retryTemplate = new RetryTemplate();
+            ...  configures the RetryTemplate with the retry policy defined in RetryConfigData
+            ....
+            return retryTemplate;
+          }
+        */
+         private final RetryTemplate retryTemplate;
+
+         private final WebClient webClient;
 
 // Constructor injection for setting all the above properties
     public KafkaAdminClient(KafkaConfigData config,
@@ -81,47 +98,12 @@ public class KafkaAdminClient {
         this.webClient = webClient;
     }
 
-    /*
-       (1) We instantiated and configure the @Bean = RetryTemplate in the common-config module , which is injected in this class.
-       (2) The RetryTemplate is used to retry the operation of creating topics in Kafka.
-       (3) The doCreateTopics method is responsible for creating topics in Kafka using the AdminClient.
-       (4) If the topic creation fails, it will retry based on the retry policy defined in RetryConfigData.
-       (5) If the topic creation is successful, it returns CreateTopicsResult.
-     */
+
     public void createTopics() {
         CreateTopicsResult createTopicsResult;
         try {
-            /*
-             ###  Method reference (implicit parameter passing) VS Lambda (explicit parameter passing) ###
-
-                  RetryTemplate execute method will retry the doCreateTopics method , passing the RetryContext as parameter
-                  until the max retry is reached or the method is successful
-
-                      (1) Lambda expression form (explicit parameter)
-                         CreateTopicsResult result1 = retryTemplate.execute(ctx -> {
-                                                                                     return doCreateTopics(ctx);
-                                                                                     });
-                                 VS
-
-                      (2) Method reference form (implicit parameter)
-                            CreateTopicsResult result2 = retryTemplate.execute(this::doCreateTopics);
-
-           ## Understanding the execute method of RetryTemplate ##
-               The execute method of RetryTemplate is a higher-order function that takes a callback function as an argument.
-               The callback function is executed within the context of the retry operation, which is represented by the RetryContext parameter.
-               The execute method handles the retry logic, including determining when to retry, how many times to retry, and how long to wait between retries.
-               It also manages the state of the retry operation, such as keeping track of the number of attempts made and any exceptions that were thrown
-               during the execution of the callback function.
-
-               The execute method returns the result of the callback function if it is successful, or throws an exception if the maximum number of
-               retries is reached without success.
-
-               In summary, the execute method of RetryTemplate provides a way to execute a piece of code with retry logic applied to it,
-               allowing for more robust and resilient applications.
-             */
-              CreateTopicsResult result4 = retryTemplate.execute(ctx -> doCreateTopics(ctx));
-             // Method reference form (implicit parameter)
-            // This will call the doCreateTopics method and pass the RetryContext as parameter
+             CreateTopicsResult resultUsingLambda = retryTemplate.execute(ctx -> doCreateTopics(ctx));
+            // replace the above line lambda with method reference
             createTopicsResult = retryTemplate.execute(this::doCreateTopics);
             log.info("Create topic result {}", createTopicsResult.values().values());
         } catch (Throwable t) {
@@ -135,18 +117,19 @@ public class KafkaAdminClient {
     // Check if the Topic is created with retry option
     public void checkTopicsCreated() {
         // Fetch the Topics created . We rely on the adminClient.listTopics().listings() , to check the topics created in the Kafka Broker
-        Collection<TopicListing> kafkaTopics = getTopics();
+        Collection<TopicListing> kafkaTopicsInCluster = getTopics();
         int retryCount = 1;
         Integer maxRetry = retryConfigData.getMaxAttempts();
         int multiplier = retryConfigData.getMultiplier().intValue();
         Long sleepTimeMs = retryConfigData.getSleepTimeMs();
-        for (String topic : kafkaConfigData.getTopicNamesToCreate()) {
-            while (!isTopicCreated(kafkaTopics, topic)) {
+        for (String topic : kafkaConfigData.getTopicNamesToCreate())
+        {
+            while (!isTopicCreated(kafkaTopicsInCluster, topic)) {
                 log.info("topic is not created yet .. maxRetry so far {} ...  " , maxRetry);
                 checkMaxRetry(retryCount++, maxRetry);
                 sleep(sleepTimeMs);
                 sleepTimeMs *= multiplier;
-                kafkaTopics = getTopics();
+                kafkaTopicsInCluster = getTopics();
             }
         }
     }
@@ -225,14 +208,7 @@ public class KafkaAdminClient {
     }
 
 
-    /*
-        doCreateTopics method is responsible for creating topics with retry logic configured in RetryTemplate, using the AdminClient.
-        It creates a list of NewTopic objects from the topic names and calls the createTopics method of the AdminClient.
-        If the topic creation fails, it will retry based on the retry policy defined in RetryConfigData.
-        If the topic creation is successful, it returns CreateTopicsResult.
-        If the topic creation fails after all retries, it throws a KafkaClientException.
-     */
-    private CreateTopicsResult doCreateTopics(RetryContext retryContext) {
+    private CreateTopicsResult doCreateTopics(RetryContext retryContext) throws ExecutionException, InterruptedException {
         List<String> topicNames = kafkaConfigData.getTopicNamesToCreate();
 
         topicNames.stream().forEach(topicName -> {

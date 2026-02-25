@@ -33,6 +33,7 @@
       -->
 
     <dependencies>
+        <!--[app-config-data] module is used to read the configurations from the Spring Cloud Config Server -->
         <dependency>
             <groupId>com.microservices.demo</groupId>
             <artifactId>app-config-data</artifactId>
