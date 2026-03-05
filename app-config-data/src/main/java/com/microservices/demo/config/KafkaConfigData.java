@@ -11,14 +11,14 @@ The below @Configuration class = KafkaConfigData .
 This class reads  Kafka cluster configuration from the  file  = config-client-reactive_elastic_query.yml
 
 kafka-config:
-  bootstrap-servers: localhost:19092, localhost:29092, localhost:39092
-  schema-registry-url-key: schema.registry.url                     => schemaRegistryUrlKey (schema-registry-url-key:)
-  schema-registry-url: http://localhost:8081                       => schemaRegistryUrl    (schema-registry-url:)
-  topic-name: twitter-topic                                        => topicName
-  topic-names-to-create:                                           => topicNamesToCreate   (topic-names-to-create:)
+  bootstrap-servers: localhost:19092, localhost:29092, localhost:39092 ==> bootstrapServers        (bootstrap-servers:)
+  schema-registry-url-key: schema.registry.url                         ==> schemaRegistryUrlKey    (schema-registry-url-key:)
+  schema-registry-url: http://localhost:8081                           ==> schemaRegistryUrl       (schema-registry-url:)
+  topic-name: twitter-topic                                            ==> topicName
+  topic-names-to-create:                                               ==> topicNamesToCreate      (topic-names-to-create:)
     - twitter-topic
-  number-of-partitions: 3                                           => numOfPartitions
-  replication-factor: 3                                             => replicationFactor
+  number-of-partitions: 3                                              ===> numOfPartitions        (number-of-partitions:)
+  replication-factor: 3                                                ===> replicationFactor       (replication-factor:)
  */
 
 @Data

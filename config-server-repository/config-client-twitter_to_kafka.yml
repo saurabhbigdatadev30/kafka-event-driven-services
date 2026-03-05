@@ -24,6 +24,7 @@ twitter-to-kafka-service:
   mock-max-tweet-length: 15 # mockMaxTweetLength in TwitterToKafkaService.java
   mock-sleep-ms: 10000      # mockSleepMs in TwitterToKafkaService.java
 
+
 # This is the configuration for the Kafka Retry mechanism.
 # It includes settings for the initial interval, maximum interval, multiplier, maximum attempts, and sleep
 retry-config:
@@ -79,8 +80,8 @@ kafka-producer-config:
   request-timeout-ms: 60000
   # retry-logic [retry-count +  retry-backoff-ms] for failed sends or delivery-timeout-ms
     # retry-count: Number of retries for failed sends. Default is 2147483647 (Integer.MAX_VALUE)
-  # ****** The first record fails to be persisted in the broker, gets inserted in the second try, so this gets inserted after the .
-  # ******  records that naturally comes after it. To prevent this, we use max.in.flight.request.per .connection property and set it to 1
+  # The first record fails to be persisted in the broker, gets inserted in the second try, so this gets inserted after the .
+  # records that naturally comes after it. To prevent this, we use max.in.flight.request.per .connection property and set it to 1
   retry-count: 5
   retry-backoff-ms: 1000
 #  The producer will wait up to 120 secs including the retries & then will throw TimeoutException

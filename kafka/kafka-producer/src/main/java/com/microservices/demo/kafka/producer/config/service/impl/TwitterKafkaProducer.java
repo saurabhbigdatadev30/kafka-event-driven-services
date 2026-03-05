@@ -1,5 +1,6 @@
 package com.microservices.demo.kafka.producer.config.service.impl;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.microservices.demo.kafka.avro.model.TwitterAvroModel;
 import com.microservices.demo.kafka.producer.config.service.KafkaProducer;
 import jakarta.annotation.PreDestroy;
@@ -31,6 +32,7 @@ public class TwitterKafkaProducer implements KafkaProducer<Long, TwitterAvroMode
         CompletableFuture<SendResult<Long, TwitterAvroModel>> kafkaResultFuture = kafkaTemplate.send(topicName, key, message);
         kafkaResultFuture.whenComplete(getCallback(topicName, message));
     }
+
 
     @PreDestroy
     public void close() {

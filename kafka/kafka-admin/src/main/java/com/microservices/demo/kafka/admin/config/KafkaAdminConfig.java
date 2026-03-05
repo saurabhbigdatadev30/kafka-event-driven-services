@@ -17,8 +17,11 @@ import java.util.Map;
 @EnableRetry
 @Configuration
 public class KafkaAdminConfig {
+    /**
+     Add dependency on KafkaConfigData present in [app-config-data module] to read cluster configuration
+     for connecting to Kafka.
+     */
 
- // Add dependency on KafkaConfigData present in [app-config-data module] to read cluster configuration for connecting to Kafka.
     private final KafkaConfigData kafkaConfigData;
 
     public KafkaAdminConfig(KafkaConfigData configData) {

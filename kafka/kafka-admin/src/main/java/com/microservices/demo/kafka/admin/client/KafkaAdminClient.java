@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
@@ -98,17 +99,33 @@ public class KafkaAdminClient {
         this.webClient = webClient;
     }
 
+  /**
+     The annonymousImplForExecute() method demonstrates how to use the RetryTemplate's execute() method with
+      an anonymous inner class implementation of the RetryCallback interface.
+     This is an alternative to using a lambda expression or method reference for the RetryCallback.
+   */
+
+      public void annonymousImplForExecute(){
+        retryTemplate.execute(new RetryCallback(){
+            @Override
+            public CreateTopicsResult doWithRetry(RetryContext retryContext) throws Exception {
+                log.info("Retry attempt {} ", retryContext.getRetryCount());
+                return doCreateTopics(retryContext);
+            };
+        });
+    }
 
     public void createTopics() {
         CreateTopicsResult createTopicsResult;
         try {
              CreateTopicsResult resultUsingLambda = retryTemplate.execute(ctx -> doCreateTopics(ctx));
             // replace the above line lambda with method reference
+            createTopicsResult = retryTemplate.execute(ctx -> doCreateTopics(ctx));
             createTopicsResult = retryTemplate.execute(this::doCreateTopics);
             log.info("Create topic result {}", createTopicsResult.values().values());
         } catch (Throwable t) {
             // If the topic creation fails after all retries, it throws a KafkaClientException
-            log.error("Error creating topic {}", t.getMessage());
+            log.error("Reached max number of retry for creating kafka topic(s)! {}", t.getMessage());
             throw new KafkaClientException("Reached max number of retry for creating kafka topic(s)!", t);
         }
         checkTopicsCreated();
@@ -116,14 +133,16 @@ public class KafkaAdminClient {
 
     // Check if the Topic is created with retry option
     public void checkTopicsCreated() {
-        // Fetch the Topics created . We rely on the adminClient.listTopics().listings() , to check the topics created in the Kafka Broker
-        Collection<TopicListing> kafkaTopicsInCluster = getTopics();
+        Collection<TopicListing> kafkaTopicsInCluster;
+        // Fetch the Topics created ,  adminClient.listTopics().listings() , to check the topics created in the Kafka Broker
+        kafkaTopicsInCluster = getTopics();
         int retryCount = 1;
         Integer maxRetry = retryConfigData.getMaxAttempts();
         int multiplier = retryConfigData.getMultiplier().intValue();
         Long sleepTimeMs = retryConfigData.getSleepTimeMs();
         for (String topic : kafkaConfigData.getTopicNamesToCreate())
         {
+            // Check if the topic is created, if not then retry until the topic is created or max retry is exhausted
             while (!isTopicCreated(kafkaTopicsInCluster, topic)) {
                 log.info("topic is not created yet .. maxRetry so far {} ...  " , maxRetry);
                 checkMaxRetry(retryCount++, maxRetry);
@@ -134,12 +153,23 @@ public class KafkaAdminClient {
         }
     }
 
-    // Check if the SchemaRegistry is up with RetryOption
+   /**
+     Check if SchemaRegistry is up with RetryOption , make a REST call to the SchemaRegistry URL defined
+     in the configuration file to check if the SchemaRegistry is up. If the REST call fails,
+     then retry until the max retry is exhausted.
+    */
     public void checkSchemaRegistry() {
         int retryCount = 1;
         Integer maxRetry = retryConfigData.getMaxAttempts();
         int multiplier = retryConfigData.getMultiplier().intValue();
         Long sleepTimeMs = retryConfigData.getSleepTimeMs();
+        /**
+           get the HttpStatusCode from the REST call to the SchemaRegistry URL to check if the SchemaRegistry is up.
+           If the REST call fails, then retry until the max retry is exhausted.
+           This is invoked before creating the topic, because the topic creation will fail if the SchemaRegistry is not up.
+            So, we need to check if the SchemaRegistry is up before creating the topic.
+          */
+
         while (!getSchemaRegistryStatus().is2xxSuccessful()) {
             // Check if the retry is exhausted
             checkMaxRetry(retryCount++, maxRetry);
@@ -148,25 +178,21 @@ public class KafkaAdminClient {
         }
     }
 
-
-    private HttpStatusCode getSchemaRegistryStatus() {
-        try {
-            // Make a REST call , to check if the Schema Registry is up
-            // We use WebClient to make a REST call to the Schema Registry URL
-            return webClient
-                    .method(HttpMethod.GET)
-                    .uri(kafkaConfigData.getSchemaRegistryUrl())
-                    .exchangeToMono(response -> {
-                        if (response.statusCode().is2xxSuccessful()) {
-                            return Mono.just(response.statusCode());
-                        } else {
-                            return Mono.just(HttpStatus.SERVICE_UNAVAILABLE);
-                        }
-                    }).block();
-        } catch (Exception e) {
-            return HttpStatus.SERVICE_UNAVAILABLE;
-        }
-    }
+    /**
+      Make a REST call to the SchemaRegistry URL defined in the configuration file to check if the SchemaRegistry is up.
+      If the REST call fails, then return SERVICE_UNAVAILABLE status.
+     */
+  private HttpStatusCode getSchemaRegistryStatus() {
+      try {
+          return webClient
+                  .method(HttpMethod.GET)
+                  .uri(kafkaConfigData.getSchemaRegistryUrl())
+                  .exchangeToMono(response -> Mono.just(response.statusCode()))
+                  .block();
+      } catch (Exception e) {
+          return HttpStatus.SERVICE_UNAVAILABLE;
+      }
+  }
 
 
     private void sleep(Long sleepTimeMs) {
@@ -183,47 +209,74 @@ public class KafkaAdminClient {
         }
     }
 
-    /*
-      Check if the topic is created
-      @param topics - Collection<TopicListing> - The topics created
-      @param topicName - String - The topic name to check
-      @return boolean - true if the topic is created, false otherwise
-     */
-    private boolean isTopicCreated(Collection<TopicListing> topics, String topicName) {
-        if (topics == null) {
-            return false;
-        }
-       // returns true if the topicName is found
-      //  return topics.stream().anyMatch(topic -> topic.name().equals(topicName));
-        return topics.stream().anyMatch(topic ->
-        {
-            boolean isCreated = topic.name().equals(topicName);
-            if (isCreated) {
-                log.info("Topic {} is created", topicName);
-            } else {
-                log.info("Topic {} is not created yet", topicName);
-            }
-            return isCreated;
-        });
+
+   private boolean isTopicCreated(Collection<TopicListing> topics , String topicName) {
+       if (topics == null) return false;
+       boolean isCreated = topics.stream()
+                           .anyMatch(topic -> {
+                                      return topic.name().equals(topicName); // returns true if the topic is created
+                                     });
+       log.info("Topic {} is {}", topicName, isCreated ? "created" : "not created yet");
+       return isCreated;
+   }
+
+    public boolean isTopicCreated1(Collection<TopicListing> topics, String topicName){
+        return topics.stream()
+                .anyMatch(topic -> {
+                 return topic.name().equals(topicName);
+                });
+
     }
 
-
     private CreateTopicsResult doCreateTopics(RetryContext retryContext) throws ExecutionException, InterruptedException {
-        List<String> topicNames = kafkaConfigData.getTopicNamesToCreate();
+        List<String> topicToBeCreated = kafkaConfigData.getTopicNamesToCreate();
 
-        topicNames.stream().forEach(topicName -> {
+        topicToBeCreated.stream().forEach(topicName -> {
             log.info("Topic {} to be created is ", topicName);
         });
 
-        log.info("Creating {} Number of topics(s), The current Retry attempt {}", topicNames.size(), retryContext.getRetryCount());
-        // Create a list of NewTopic objects from the topic names read from the configuration
-        List<NewTopic> kafkaTopics = topicNames.stream()
-                                     .map(topic ->  // Build NewTopic(topicName, numOfPartitions, replicationFactor)
-                                      new NewTopic(topic.trim(), kafkaConfigData.getNumOfPartitions(), kafkaConfigData.getReplicationFactor()
-                                      )).collect(Collectors.toList());
-        // Create the topics using the AdminClient . The AdminClient is injected using the CI in this class
-        // The createTopics method returns CreateTopicsResult
+        log.info("Creating {} Number of topics(s), The current Retry attempt {}", topicToBeCreated.size(), retryContext.getRetryCount());
+        List<NewTopic> kafkaTopics = topicToBeCreated.stream()
+                                     .map(topic ->
+                                      { // Create a NewTopic object for each topic name to be created,
+                                         return new NewTopic(topic.trim(), kafkaConfigData.getNumOfPartitions(),
+                                                              kafkaConfigData.getReplicationFactor());
+                                      }).collect(Collectors.toList());
+
+      /*
+        The adminClient.createTopics() returns CreateTopicsResult which contains KafkaFuture per topic.
+        We can convert each KafkaFuture to CompletableFuture and attach callbacks:
+       */
         return adminClient.createTopics(kafkaTopics);
+    }
+
+    private CreateTopicsResult doCreateTopicsNonBlocking(RetryContext retryContext) throws ExecutionException, InterruptedException {
+        List<String> topicToBeCreated = kafkaConfigData.getTopicNamesToCreate();
+        log.info("Creating {} Number of topics(s), The current Retry attempt {}", topicToBeCreated.size(), retryContext.getRetryCount());
+
+        List<NewTopic> kafkaTopics = topicToBeCreated.stream()
+                .map(topic -> new NewTopic(topic.trim(),
+                                     kafkaConfigData.getNumOfPartitions(),
+                                     kafkaConfigData.getReplicationFactor()))
+                .collect(Collectors.toList());
+
+        CreateTopicsResult createTopicsResult = adminClient.createTopics(kafkaTopics);
+
+        // Attach a callback per topic using CompletableFuture
+        createTopicsResult.values().forEach((topicName, kafkaFuture) -> {
+            // KafkaFuture.toCompletionStage() converts KafkaFuture → CompletionStage → CompletableFuture
+            kafkaFuture.toCompletionStage()
+                       .toCompletableFuture()
+                       .whenComplete((result, ex) -> {
+                           if (ex != null) {
+                               log.error("Topic {} creation FAILED: {}", topicName, ex.getMessage());
+                           } else {
+                               log.info("Topic {} created SUCCESSFULLY", topicName);
+                           }
+                       });
+        });
+
+        return createTopicsResult;
     }
 
    // Fetch the topics created from the adminClient
@@ -233,6 +286,7 @@ public class KafkaAdminClient {
             // Check the topics created
             topics = retryTemplate.execute(this::doGetTopics);
         } catch (Throwable t) {
+            log.error("Error reading kafka topic {}", t.getMessage());
             throw new KafkaClientException("Reached max number of retry for reading kafka topic(s)!", t);
         }
         return topics;

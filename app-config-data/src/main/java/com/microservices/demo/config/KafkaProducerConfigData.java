@@ -23,8 +23,8 @@ public class KafkaProducerConfigData {
 
 }
 /*
-In the module aap-config-data , we create a configuration class = KafkaProducerConfigData  to read from  config-client-twitter_to_kafka.yml
-"kafka-producer-config:"
+In the module aap-config-data , we create a configuration class = KafkaProducerConfigData to read from
+config-client-twitter_to_kafka.yml section
 
 kafka-producer-config:
   key-serializer-class: org.apache.kafka.common.serialization.LongSerializer

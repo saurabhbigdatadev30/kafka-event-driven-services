@@ -9,17 +9,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
-
+import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-// This class is responsible for configuring the Kafka producer.
-
 @Configuration
 public class KafkaProducerConfig<K extends Serializable, V extends SpecificRecordBase> {
 
-    /*
+    /**
       In the kafka-producer module, add maven dependency of  app-config-data module to read the configurations
      from KafkaConfigData & KafkaProducerConfigData
      */
@@ -32,13 +30,16 @@ public class KafkaProducerConfig<K extends Serializable, V extends SpecificRecor
         this.kafkaProducerConfigData = producerConfigData;
     }
 
-    // We create a bean of Map<String, Object> to hold the properties for ProducerConfig
+    /**
+      We create @Bean that returns a Map<String, Object> which contains the configuration properties for the Kafka producer.
+      These properties are used to configure the ProducerFactory and KafkaTemplate beans.
+      */
     @Bean
     public Map<String, Object> producerConfig() {
         // Build the properties of ProducerConfig
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaConfigData.getBootstrapServers());
-        props.put(kafkaConfigData.getSchemaRegistryUrlKey(), kafkaConfigData.getSchemaRegistryUrl());
+        props.put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, kafkaConfigData.getSchemaRegistryUrl());
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, kafkaProducerConfigData.getKeySerializerClass());
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, kafkaProducerConfigData.getValueSerializerClass());
         props.put(ProducerConfig.BATCH_SIZE_CONFIG, kafkaProducerConfigData.getBatchSize() *
@@ -54,6 +55,7 @@ public class KafkaProducerConfig<K extends Serializable, V extends SpecificRecor
         return props;
     }
 
+    // Create a bean of ProducerFactory<K, V> which will be used to create KafkaTemplate<K, V>
     @Bean
     public ProducerFactory<K, V> producerFactory() {
         return new DefaultKafkaProducerFactory<>(producerConfig());

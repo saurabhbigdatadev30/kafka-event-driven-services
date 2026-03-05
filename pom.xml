@@ -340,7 +340,7 @@
 			</dependency>
 
 			<!--
-			We  need to add some exclusions to Kafka avro serializer dependency for slF4j, lof4j and swagger
+			 We  need to add some exclusions to Kafka avro serializer dependency for slF4j, lof4j and swagger
 			 Because we don't want to use these dependencies from Kafka Avro Serializer library.
 			-->
 			<dependency>
