@@ -38,6 +38,7 @@
             <groupId>com.microservices.demo</groupId>
             <artifactId>app-config-data</artifactId>
         </dependency>
+        <!-- We provide scope , since lombok is compile only & not required at runtime so we provide the scope-->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

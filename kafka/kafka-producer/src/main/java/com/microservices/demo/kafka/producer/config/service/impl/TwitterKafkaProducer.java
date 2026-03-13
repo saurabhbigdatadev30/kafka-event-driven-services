@@ -25,12 +25,12 @@ public class TwitterKafkaProducer implements KafkaProducer<Long, TwitterAvroMode
         this.kafkaTemplate = template;
     }
 
-    @Override
+  @Override
     public void send(String topicName, Long key, TwitterAvroModel message) {
         LOG.info("Sending message='{}' to topic='{}'", message, topicName);
         // key is the userId of the tweet, and message is the TwitterAvroModel, so send the message to same partition for the same userId
-        CompletableFuture<SendResult<Long, TwitterAvroModel>> kafkaResultFuture = kafkaTemplate.send(topicName, key, message);
-        kafkaResultFuture.whenComplete(getCallback(topicName, message));
+        CompletableFuture<SendResult<Long, TwitterAvroModel>> futureResult = kafkaTemplate.send(topicName, key, message);
+        futureResult.whenComplete(getCallback(topicName, message));
     }
 
 

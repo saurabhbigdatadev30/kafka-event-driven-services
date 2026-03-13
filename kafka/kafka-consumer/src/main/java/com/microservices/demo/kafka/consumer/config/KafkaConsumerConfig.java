@@ -52,10 +52,13 @@ public class KafkaConsumerConfig<K extends Serializable, V extends SpecificRecor
 
     @Bean
     public ConsumerFactory<K, V> consumerFactory() {
-
-        return new DefaultKafkaConsumerFactory<>(consumerConfigs());
+        return new DefaultKafkaConsumerFactory<K,V>(consumerConfigs());
     }
 
+    /*
+     The generics ensures that ConcurrentMessageListenerContainer has K that extends Serializable
+     and value that extends SpecificRecordBase.
+     */
     @Bean
     public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<K, V>> kafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<K, V> factory = new ConcurrentKafkaListenerContainerFactory<>();

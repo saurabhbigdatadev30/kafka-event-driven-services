@@ -17,14 +17,25 @@ kafka-consumer-config:
   key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
   value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
   consumer-group-id: twitter-topic-consumer
+  # default is latest, to read from beginning of  topic,  we set it to earliest.
   auto-offset-reset: earliest
   specific-avro-reader-key: specific.avro.reader
   specific-avro-reader: true
   batch-listener: true
+  # We control the startup of the consumer manually in the KafkaToElasticService class.
+  # This allows us to ensure that the consumer only starts after the topic has been created and is ready to receive messages.
   auto-startup: false
+  # 3 consumers will be created in the consumer group . This allows for concurrent processing of messages from the topic.
+  # However, these consumers run on single JVM
   concurrency-level: 3
+  # Broker will consider the consumer dead if it does not receive least 1 heartbeat within this time.
+  # The consumer will then be removed from the group and a rebalance will occur.
   session-timeout-ms: 10000
+  # Frequency with which the consumer sends heartbeats to the broker to indicate that it is still alive and processing messages.
+  # If the consumer fails to send a heartbeat within the session timeout, it will be considered dead and removed from the group.
   heartbeat-interval-ms: 3000
+  # If the consumer processing message takes longer than the max-poll-interval-ms, the consumer will be considered dead and removed from the group.
+  # This can lead to duplicate processing of messages if the consumer is still processing messages when it is removed from the group.
   max-poll-interval-ms: 300000
   max-poll-records: 500
   max-partition-fetch-bytes-default: 1048576
