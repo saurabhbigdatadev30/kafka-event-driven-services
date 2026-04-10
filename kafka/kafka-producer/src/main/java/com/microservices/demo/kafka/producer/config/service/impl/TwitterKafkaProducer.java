@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
-
 @Service
 public class TwitterKafkaProducer implements KafkaProducer<Long, TwitterAvroModel> {
 
@@ -28,9 +27,14 @@ public class TwitterKafkaProducer implements KafkaProducer<Long, TwitterAvroMode
   @Override
     public void send(String topicName, Long key, TwitterAvroModel message) {
         LOG.info("Sending message='{}' to topic='{}'", message, topicName);
-        // key is the userId of the tweet, and message is the TwitterAvroModel, so send the message to same partition for the same userId
+
+       /**
+          (key,value) -> (userId , TwitterAvroModel)
+           key is the userId of the tweet, and message is the TwitterAvroModel, so send the message to same partition for the same userId
+        */
+
         CompletableFuture<SendResult<Long, TwitterAvroModel>> futureResult = kafkaTemplate.send(topicName, key, message);
-        futureResult.whenComplete(getCallback(topicName, message));
+        futureResult.whenComplete(getTwitterCallback(topicName, message));
     }
 
 
@@ -42,7 +46,8 @@ public class TwitterKafkaProducer implements KafkaProducer<Long, TwitterAvroMode
         }
     }
 
-    private BiConsumer<SendResult<Long, TwitterAvroModel>, Throwable> getCallback(String topicName, TwitterAvroModel message) {
+    private BiConsumer<SendResult<Long, TwitterAvroModel>, Throwable> getTwitterCallback(String topicName, TwitterAvroModel message)
+    {
         return (result, ex) -> {
             if (ex == null) {
                 LOG.info("message sent successfully to topic {} with key {} and value {}", topicName, message.getUserId(), message);

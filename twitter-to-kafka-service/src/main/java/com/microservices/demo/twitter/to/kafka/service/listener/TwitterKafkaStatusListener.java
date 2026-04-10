@@ -13,20 +13,6 @@ import twitter4j.StatusAdapter;
 @Slf4j
 @Component
 
-
-/*
-     (1)  The public class TwitterKafkaStatusListener extends StatusAdapter & overrides the onStatus() method.
-          Instead of implementing the StatusListener interface, we extend StatusAdapter class from the Twitter4J library, which provides a default
-          implementation of the StatusListener interface.
-          By extending StatusAdapter, we can override only the methods we are interested in. In this case, the onStatus() method, without
-          having to implement all the methods of the StatusListener interface.
-
-     (2)    onStatus method --> When a new status/tweet is received, it transforms the tweet object into an Avro model
-                                and publishes it to a Kafka topic. The tweet object  is transformed into TwitterAvroModel (value)
-                                & the key is userId of the tweet , we send WKafkaProducer<Long,TwitterAvroModel>
-
-                              Has dependencies to KafkaProducer module , app-config-data  module and KafkaModel module
- */
 public class TwitterKafkaStatusListener extends StatusAdapter {
     // Dependencies: app-config-data module    ->  To read the topic name where the message to be published.
      private final KafkaConfigData kafkaConfigData;

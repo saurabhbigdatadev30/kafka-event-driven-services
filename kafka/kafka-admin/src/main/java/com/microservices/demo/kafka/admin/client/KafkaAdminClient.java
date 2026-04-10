@@ -29,10 +29,10 @@ import java.util.stream.Collectors;
 /*
 KafkaAdminClient is utility class defined in kafka-admin module which is responsible to create Topic .
 
-The kafka-admin module [KafkaAdminClient.java]   depends  on the other module classes
+The kafka-admin module [KafkaAdminClient.java]  depends  on the other module classes
 
 (1) KafkaConfigData.java - @Configuration class defined in the app-config-data module which reads the Kafka configurations
-                            [prefix = "kafka-config"]  from the config-client-analytics.yml file
+                            [prefix = "kafka-config"]  from the config-client-twitter_to_kafka.yml file
 
 (2) RetryConfigData.java - @Configuration class defined in the app-config-data module which reads the Retry  configurations
                             [prefix = "retry-config"] from the config-client-kafka_to_elastic.yml file
@@ -54,37 +54,13 @@ public class KafkaAdminClient {
     // The RetryConfigData is a Configuration class that includes from  Module =  app-config-data module
     private final RetryConfigData retryConfigData;
 
-    /**
-
-    */
+    // AdminClient is a Spring Bean instantiated by KafkaAdminConfig (a @Configuration class) in the kafka-admin module.
     private final AdminClient adminClient;
 
-   /**
-    1. The @Configuration class = RetryConfig defined in common-config module & is responsible to create @Bean - RetryTemplate.
-    2. The RetryTemplate is configured with the Retry policies defined in RetryConfigData, defined in app-config-data module.
-    3. So , the app-config-data module [RetryConfigData] is added as dependency in the common-config module to read the
-       retry configurations from the config-client-twitter-to-kafka.yml file and build the RetryTemplate Bean in the common-config module.
-    4. The kafka-admin module , KafkaAdminClient class is responsible to create topics in Kafka Broker, and it uses
-       the RetryTemplate Bean defined in the common-config module to retry the topic creation operation if it fails.
-    5. We add dependency of module = app-config-data .. in module =  common-config module , which contains RetryConfigData . This is
-       responsible to read the retry configurations.
+    // RetryTemplate is a Spring Bean instantiated by RetryConfig (a @Configuration class) in the common-config module.
+   private final RetryTemplate retryTemplate;
 
-        @Configuration
-        public class RetryConfig {
-        // Defined in the module = app-config-data , reads the retry configurations from the config-client-twitter-to-kafka.yml file
-        private RetryConfigData retryConfigData;
-
-          @Bean
-          public RetryTemplate retryTemplate() {
-            RetryTemplate retryTemplate = new RetryTemplate();
-            ...  configures the RetryTemplate with the retry policy defined in RetryConfigData
-            ....
-            return retryTemplate;
-          }
-        */
-         private final RetryTemplate retryTemplate;
-
-         private final WebClient webClient;
+   private final WebClient webClient;
 
 // Constructor injection for setting all the above properties
     public KafkaAdminClient(KafkaConfigData config,
@@ -118,8 +94,6 @@ public class KafkaAdminClient {
     public void createTopics() {
         CreateTopicsResult createTopicsResult;
         try {
-             CreateTopicsResult resultUsingLambda = retryTemplate.execute(ctx -> doCreateTopics(ctx));
-            // replace the above line lambda with method reference
             createTopicsResult = retryTemplate.execute(ctx -> doCreateTopics(ctx));
             createTopicsResult = retryTemplate.execute(this::doCreateTopics);
             log.info("Create topic result {}", createTopicsResult.values().values());

@@ -20,9 +20,9 @@ import java.util.Map;
 @EnableKafka
 @Configuration
 public class KafkaConsumerConfig<K extends Serializable, V extends SpecificRecordBase> {
-
+   // app-config-data module
     private final KafkaConfigData kafkaConfigData;
-
+    // app-config-data module
     private final KafkaConsumerConfigData kafkaConsumerConfigData;
 
     public KafkaConsumerConfig(KafkaConfigData configData, KafkaConsumerConfigData consumerConfigData) {
@@ -55,17 +55,16 @@ public class KafkaConsumerConfig<K extends Serializable, V extends SpecificRecor
         return new DefaultKafkaConsumerFactory<K,V>(consumerConfigs());
     }
 
-    /*
-     The generics ensures that ConcurrentMessageListenerContainer has K that extends Serializable
-     and value that extends SpecificRecordBase.
-     */
+
     @Bean
     public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<K, V>> kafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<K, V> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
+        // We get data from Kafka in batches , not one by one
         factory.setBatchListener(kafkaConsumerConfigData.getBatchListener());
+        // Number of threads that will be consuming the messages from partitions concurrently.
         factory.setConcurrency(kafkaConsumerConfigData.getConcurrencyLevel());
-        // THis is used to set the auto startup of the listener container , set this to false if you want to start the listener manually
+        // This is used to set the auto startup of KafkaListenerContainer , set this to false if we want to start the listener manually
         factory.setAutoStartup(kafkaConsumerConfigData.getAutoStartup());
         factory.getContainerProperties().setPollTimeout(kafkaConsumerConfigData.getPollTimeoutMs());
         return factory;

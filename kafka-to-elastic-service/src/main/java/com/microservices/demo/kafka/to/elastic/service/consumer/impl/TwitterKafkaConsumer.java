@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Service
-public class TwitterKafkaConsumer implements KafkaConsumer<TwitterAvroModel> {
+public class TwitterKafkaConsumer implements KafkaConsumer<Long, TwitterAvroModel> {
 
     private static final Logger LOG = LoggerFactory.getLogger(TwitterKafkaConsumer.class);
 
@@ -59,6 +59,7 @@ public class TwitterKafkaConsumer implements KafkaConsumer<TwitterAvroModel> {
     public void onAppStarted(ApplicationStartedEvent event) {
         kafkaAdminClient.checkTopicsCreated();
         LOG.info("Topics with name {} is ready for operations!", kafkaConfigData.getTopicNamesToCreate().toArray());
+       // We manually start the Kafka Listener only when the checkTopicCreated returns topics
         Objects.requireNonNull(kafkaListenerEndpointRegistry
                 .getListenerContainer(kafkaConsumerConfigData.getConsumerGroupId())).start();
     }
@@ -68,7 +69,8 @@ public class TwitterKafkaConsumer implements KafkaConsumer<TwitterAvroModel> {
     public void receive(@Payload List<TwitterAvroModel> messages,
                         @Header(KafkaHeaders.RECEIVED_KEY) List<Long> keys,
                         @Header(KafkaHeaders.RECEIVED_PARTITION) List<Integer> partitions,
-                        @Header(KafkaHeaders.OFFSET) List<Long> offsets) {
+                        @Header(KafkaHeaders.OFFSET) List<Long> offsets)
+    {
         LOG.info("{} number of message received with keys {}, partitions {} and offsets {}, " +
                         "sending it to elastic: Thread id {}",
                 messages.size(),

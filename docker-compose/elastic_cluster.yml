@@ -8,6 +8,7 @@ services:
       - cluster.name=es-twitter-cluster
       - discovery.seed_hosts=elastic-2,elastic-3
       - cluster.initial_master_nodes=elastic-1,elastic-2,elastic-3
+      # Prevent Elasticsearch from swapping memory to disk, which can cause performance issues.
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:

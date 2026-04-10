@@ -50,11 +50,9 @@ public class TwitterV2KafkaStreamRunner implements StreamRunner {
         String bearerToken = twitterToKafkaServiceConfigData.getTwitterV2BearerToken();
         if (null != bearerToken) {
             try {
-                twitterV2StreamHelper.setupRulesModified(bearerToken, this::getRules);
-
-                // Connect to the Twitter V2 stream API , fetch continues stream of tweets  & send to Kafka Topic.
+                twitterV2StreamHelper.setupRulesModified(bearerToken, () -> getRules());
                 twitterV2StreamHelper.connectStream(bearerToken);
-            } catch (IOException | URISyntaxException | TwitterException | JSONException e) {
+            } catch (IOException | URISyntaxException | JSONException e) {
                 LOG.error("Error streaming tweets in V2 API!", e);
                 throw new RuntimeException("Error streaming tweets!", e);
             }

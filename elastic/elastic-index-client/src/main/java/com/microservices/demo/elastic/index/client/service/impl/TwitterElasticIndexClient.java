@@ -38,13 +38,19 @@ public class TwitterElasticIndexClient implements ElasticIndexClient<TwitterInde
         this.elasticIndexUtil = indexUtil;
     }
 
+    /**
+     Will send up to 500 documents [TwitterIndexModel] , based on the poll() configured
+     Return the List of document Ids inserted [List<TwitterIndexModel> documents]
+     */
     @Override
     public List<String> save(List<TwitterIndexModel> documents) {
         List<IndexQuery> indexQueries = elasticIndexUtil.getIndexQueries(documents);
         List<String> documentIds = elasticsearchOperations.bulkIndex(
                 indexQueries,
                 IndexCoordinates.of(elasticConfigData.getIndexName())
-        ).stream().map(IndexedObjectInformation::id).collect(Collectors.toList());
+        )
+                .stream()
+                .map(IndexedObjectInformation::id).collect(Collectors.toList());
         LOG.info("Documents indexed successfully with type: {} and ids: {}", TwitterIndexModel.class.getName(),
                 documentIds);
         return documentIds;

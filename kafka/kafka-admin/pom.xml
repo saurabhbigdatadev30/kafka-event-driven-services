@@ -17,8 +17,8 @@
     <artifactId>kafka-admin</artifactId>
     <dependencies>
         <!--
-            app-config-data module has the configuration properties classes which are used in KafkaAdminConfig class to
-            read the Kafka related properties
+            app-config-data module has the configuration properties classes which are used in
+             KafkaAdminConfig class to read the Kafka related properties
          -->
         <dependency>
             <groupId>com.microservices.demo</groupId>
@@ -31,7 +31,7 @@
         </dependency>
 
         <!-- common-config module has the RetryTemplate bean which is used in KafkaAdminConfig class to create retry
-            logic for topic creation -->
+             logic for topic creation -->
         <dependency>
             <groupId>com.microservices.demo</groupId>
             <artifactId>common-config</artifactId>

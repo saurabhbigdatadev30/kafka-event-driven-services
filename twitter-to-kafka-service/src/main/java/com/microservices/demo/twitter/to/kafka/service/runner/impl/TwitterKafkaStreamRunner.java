@@ -18,11 +18,12 @@ import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 
 /**
-  The TwitterKafkaStreamRunner class  implements the StreamRunner interface. This Bean is responsible for connecting to the
-  Twitter API and listening for tweets that match certain keywords.
-  This Bean will be loaded when enable-mock-tweets = false & enable-v2-tweets =false.
-  This class uses the Twitter4J library to create a Twitter stream and filter tweets based on keywords specified in the configuration.
-
+  1. The TwitterKafkaStreamRunner class  implements the StreamRunner interface.
+  2. This Bean is responsible for connecting to the Twitter API and listening for tweets that match
+      certain keywords.
+  3. This Bean will be loaded when enable-mock-tweets = false & enable-v2-tweets =false.
+  4. This Implementation  uses the Twitter4J library to create a Twitter stream and filter tweets based on
+     keywords specified in the configuration.
  */
 @Slf4j
 @Component
@@ -41,17 +42,12 @@ public class TwitterKafkaStreamRunner implements StreamRunner {
     private TwitterStream twitterStream;
 
     /**
-       1. We don't use @AllArgsConstructor because we want to explicitly define the constructor and inject the dependencies
-           via constructor injection.
-        2. We have 2 dependencies in this class , TwitterToKafkaServiceConfigData and TwitterKafkaStatusListener, we inject them
-           via constructor injection.
-       3. We don't create a @Configuration to create @Bean = TwitterStream &  inject the TwitterStream here using constructor injection
-          This is because we want to create a new instance of TwitterStream  each time the start() method is called.
-          This ensures that we have a fresh connection to the Twitter API.
-           If we inject the TwitterStream via constructor, we would have a single instance of TwitterStream that would be
-           shared across multiple calls to the start() method, which could lead to issues with stale connections or resource leaks.
-
-        4.  So, we create the TwitterStream instance in the start() method instead of injecting it via constructor.
+       Option-A Using @Lombok for Contructor Injection
+       @RequiredArgsConstructor    // ← Only injects FINAL fields
+        private final TwitterToKafkaServiceConfigData twitterToKafkaServiceConfigData;  // ✅ included
+        private final TwitterKafkaStatusListener twitterKafkaStatusListener;            // ✅ included
+        private TwitterStream twitterStream;   // NOT final → ✅ EXCLUDED
+       TwitterStream has no Spring @Bean definition, so we will create it in the start() method .
      */
     public TwitterKafkaStreamRunner(TwitterToKafkaServiceConfigData configData,
                                     TwitterKafkaStatusListener statusListener) {
@@ -62,7 +58,6 @@ public class TwitterKafkaStreamRunner implements StreamRunner {
            fresh connection to the Twitter API each time the stream is started.
          */
     }
-
 
      @Override
      public void start() throws TwitterException {

@@ -43,7 +43,7 @@ public class FilteredStreamDemo {
      * This method calls the filtered stream endpoint and streams Tweets from it
      * */
     private static void connectStream(String bearerToken) throws IOException, URISyntaxException {
-      // 1. Create a HttpClient.
+      // 1. Create a HttpClient Object.
         HttpClient httpClient = HttpClients.custom()
                 .setDefaultRequestConfig(RequestConfig.custom()
                 .setCookieSpec(CookieSpecs.STANDARD).build())
@@ -68,10 +68,9 @@ public class FilteredStreamDemo {
 
     }
 
-    /*
-     * Helper method to setup rules before streaming data
-     * */
-    private static void setupRules(String bearerToken, Map<String, String> rules) throws IOException, URISyntaxException {
+
+    private static void setupRules(String bearerToken, Map<String, String> rules)
+            throws IOException, URISyntaxException {
         List<String> existingRules = getRules(bearerToken);
         if (existingRules.size() > 0) {
             deleteRules(bearerToken, existingRules);
@@ -79,17 +78,16 @@ public class FilteredStreamDemo {
         createRules(bearerToken, rules);
     }
 
-    /*
-     * Helper method to create rules for filtering
-     * */
-    private static void createRules(String bearerToken, Map<String, String> rules) throws URISyntaxException, IOException {
+
+    private static void createRules(String bearerToken, Map<String, String> rules)
+            throws URISyntaxException, IOException
+    {
         HttpClient httpClient = HttpClients.custom()
-                .setDefaultRequestConfig(RequestConfig.custom()
-                        .setCookieSpec(CookieSpecs.STANDARD).build())
-                .build();
+                 .setDefaultRequestConfig(RequestConfig.custom()
+                 .setCookieSpec(CookieSpecs.STANDARD).build())
+                 .build();
 
         URIBuilder uriBuilder = new URIBuilder("https://api.x.com/2/tweets/search/stream/rules");
-
         HttpPost httpPost = new HttpPost(uriBuilder.build());
         httpPost.setHeader("Authorization", String.format("Bearer %s", bearerToken));
         httpPost.setHeader("content-type", "application/json");
@@ -102,18 +100,35 @@ public class FilteredStreamDemo {
         }
     }
 
-    /*
-     * Helper method to get existing rules
-     * */
+    /**
+    {
+    "data": [                          ← JSONArray  (key = "data")
+        {                              ← JSONObject (element 0)
+            "id":    "123456789",      ← rules.add(jsonObject.getString("id"))
+            "value": "cats has:images",
+            "tag":   "cat images"
+        },
+        {                              ← JSONObject (element 1)
+            "id":    "987654321",
+            "value": "dogs has:images",
+            "tag":   "dog images"
+        }
+    ],
+    "meta": {                          ← 2nd key in JSONObject
+        "sent":         "2026-03-16T00:00:00.000Z",
+        "result_count": 2
+    }
+}
+
+
+    */
     private static List<String> getRules(String bearerToken) throws URISyntaxException, IOException {
         List<String> rules = new ArrayList<>();
         HttpClient httpClient = HttpClients.custom()
                 .setDefaultRequestConfig(RequestConfig.custom()
                         .setCookieSpec(CookieSpecs.STANDARD).build())
                 .build();
-
         URIBuilder uriBuilder = new URIBuilder("https://api.x.com/2/tweets/search/stream/rules");
-
         HttpGet httpGet = new HttpGet(uriBuilder.build());
         httpGet.setHeader("Authorization", String.format("Bearer %s", bearerToken));
         httpGet.setHeader("content-type", "application/json");
@@ -121,7 +136,7 @@ public class FilteredStreamDemo {
         HttpEntity entity = response.getEntity();
         if (null != entity) {
             JSONObject json = new JSONObject(EntityUtils.toString(entity, "UTF-8"));
-            if (json.length() > 1) {
+            if (json.length() > 1 && json.has("data")) {
                 JSONArray array = (JSONArray) json.get("data");
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject jsonObject = (JSONObject) array.get(i);
