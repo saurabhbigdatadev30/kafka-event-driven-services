@@ -10,7 +10,7 @@ import org.springframework.retry.annotation.EnableRetry;
 import java.util.Map;
 
 /**
- KafkaAdminConfig is a configuration class that sets up an AdminClient bean for managing Kafka topics, consumer groups, etc.
+    KafkaAdminConfig is a configuration class that sets up an AdminClient bean for managing Kafka topics, consumer groups, etc.
     It reads from the KafkaConfigData to get the bootstrap servers for connecting to the Kafka cluster.
     The @EnableRetry annotation allows retrying operations in case of failures.
  */

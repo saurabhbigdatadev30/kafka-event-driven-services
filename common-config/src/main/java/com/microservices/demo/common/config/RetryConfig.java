@@ -24,7 +24,8 @@ public class RetryConfig {
     }
 
     @Bean
-     public RetryTemplate retryTemplate() {
+     public RetryTemplate retryTemplate()
+    {
         // Create a @Bean = RetryTemplate , configure the ExponentialBackOffPolicy and SimpleRetryPolicy
         RetryTemplate retryTemplate = new RetryTemplate();
 
@@ -34,13 +35,13 @@ public class RetryConfig {
         exponentialBackOffPolicy.setMaxInterval(retryConfigData.getMaxIntervalMs());
         exponentialBackOffPolicy.setMultiplier(retryConfigData.getMultiplier());
 
-        // [2] Set retryTemplate for the ExponentialBackOffPolicy
+        // [2] ✔ Set retryTemplate for the ExponentialBackOffPolicy
         retryTemplate.setBackOffPolicy(exponentialBackOffPolicy);
 
         SimpleRetryPolicy simpleRetryPolicy = new SimpleRetryPolicy();
         simpleRetryPolicy.setMaxAttempts(retryConfigData.getMaxAttempts());
 
-        // [3] Set retryTemplate for RetryPolicy
+        // [3] ✔ Set retryTemplate for RetryPolicy
         retryTemplate.setRetryPolicy(simpleRetryPolicy);
 
         return retryTemplate;

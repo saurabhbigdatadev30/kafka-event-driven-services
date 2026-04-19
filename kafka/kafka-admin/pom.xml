@@ -16,10 +16,10 @@
 
     <artifactId>kafka-admin</artifactId>
     <dependencies>
-        <!--
-            app-config-data module has the configuration properties classes which are used in
-             KafkaAdminConfig class to read the Kafka related properties
-         -->
+    <!--
+         app-config-data module has the @Configuration classes that reads from ConfigServer which are used in
+         KafkaAdminConfig class to read the Kafka related properties
+     -->
         <dependency>
             <groupId>com.microservices.demo</groupId>
             <artifactId>app-config-data</artifactId>

@@ -11,7 +11,14 @@ services:
       - "JAVA_OPTS=-Djboss.http.port=9091"
       - "DB_VENDOR=POSTGRES"
       - "DB_ADDR=host.docker.internal"
+      # Once DB is running on the host machine, we can connect to it from the Docker container using host.docker.internal:5432 (default Postgres port).
       - "DB_DATABASE=keycloak"
       - "DB_USER=keycloak"
       - "DB_SCHEMA=keycloak"
       - "DB_PASSWORD=keycloak"
+
+    # We use host.docker.internal to connect to the Postgres database running on the host machine from within the Docker container.
+    # This allows us to keep the database outside the container and manage it separately.
+    # If we were to run the database inside a container, we would need to set up a separate service for it in the docker-compose file and manage its lifecycle along with the Keycloak container
+    # Once the DB is up using the DB Client (pgAdmin) we can connect to it using host.docker.internal:5432 with the credentials specified in the environment variables above.
+    # Create user , db and schema in the Postgres database before starting the Keycloak container. This can be done using a SQL client like pgAdmin or psql command line tool.

@@ -1,7 +1,11 @@
 package com.microservices.demo.kafka.to.elastic.service.consumer;
 
+import com.microservices.demo.kafka.avro.model.TwitterAvroModel;
 import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.springframework.kafka.support.Acknowledgment;
 
+import java.io.Serializable;
 import java.util.List;
 
 /*
@@ -9,6 +13,8 @@ import java.util.List;
     It is parameterized with a type T that extends SpecificRecordBase, allowing it to work with Avro records.
     The receive method takes lists of messages <avro format>, keys, partitions, and offsets as parameters.
  */
-public interface KafkaConsumer<T extends SpecificRecordBase> {
-    void receive(List<T> messages, List<Long> keys, List<Integer> partitions, List<Long> offsets);
+public interface KafkaConsumer<K extends Serializable, V extends SpecificRecordBase> {
+    void receive(List<V> messages, List<Long> keys, List<Integer> partitions, List<Long> offsets,
+                 Acknowledgment acknowledgment ,
+                 Consumer<Long, TwitterAvroModel> consumer);
 }

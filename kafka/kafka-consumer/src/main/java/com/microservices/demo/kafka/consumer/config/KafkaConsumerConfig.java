@@ -12,6 +12,7 @@ import org.springframework.kafka.config.KafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
+import org.springframework.kafka.listener.ContainerProperties;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -67,6 +68,8 @@ public class KafkaConsumerConfig<K extends Serializable, V extends SpecificRecor
         // This is used to set the auto startup of KafkaListenerContainer , set this to false if we want to start the listener manually
         factory.setAutoStartup(kafkaConsumerConfigData.getAutoStartup());
         factory.getContainerProperties().setPollTimeout(kafkaConsumerConfigData.getPollTimeoutMs());
+        // ← ADD THIS: Without this, acknowledgment.acknowledge() does nothing
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
         return factory;
     }
 }

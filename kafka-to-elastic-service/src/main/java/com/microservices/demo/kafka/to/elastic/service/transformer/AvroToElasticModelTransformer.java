@@ -27,3 +27,19 @@ public class AvroToElasticModelTransformer {
                 ).collect(Collectors.toList());
     }
 }
+
+/**
+
+ .createdAt(ZonedDateTime.ofInstant(Instant.ofEpochMilli(avroModel.getCreatedAt()),
+ ZoneId.systemDefault()))
+
+-  The selected code converts a Unix timestamp (milliseconds since epoch) to a ZonedDateTime object
+     avroModel.getCreatedAt()  — Retrieves the timestamp as a long value (epoch milliseconds)
+     Instant.ofEpochMilli(...) — Converts the epoch milliseconds into an Instant (a point in time)
+     ZonedDateTime.ofInstant(..., ZoneId.systemDefault()) — converts the Instant to a ZonedDateTime using
+                                   the system's default timezone
+
+
+
+
+ */

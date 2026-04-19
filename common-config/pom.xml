@@ -12,6 +12,7 @@
     <artifactId>common-config</artifactId>
 
     <dependencies>
+        <!--Contains all the *ConfigData classes that reads from the ConfigServer  -->
         <dependency>
             <groupId>com.microservices.demo</groupId>
             <artifactId>app-config-data</artifactId>
@@ -20,7 +21,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot</artifactId>
         </dependency>
-        <!-- To create RetryTemplate bean -->
+        <!-- To create RetryTemplate bean , we use dependency -->
         <dependency>
             <groupId>org.springframework.retry</groupId>
             <artifactId>spring-retry</artifactId>
