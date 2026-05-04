@@ -37,7 +37,8 @@ public class TwitterToKafkaServiceApplication implements CommandLineRunner {
      In this method we call the init() method of StreamInitializer to create the Kafka topic
      */
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) throws Exception
+    {
          log.info("App starts...>>>");
         // init method is responsible to create Kafka Topic
         streamInitializer.init();

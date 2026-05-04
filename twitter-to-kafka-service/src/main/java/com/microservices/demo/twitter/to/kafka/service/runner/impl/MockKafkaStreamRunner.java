@@ -115,7 +115,8 @@ public class MockKafkaStreamRunner implements StreamRunner {
 
 
 /*
-  simulateTwitterStream() method generates tweets with random content in infinite loop ,with random length between min and max tweet length.
+  simulateTwitterStream() method generates tweets with random content in infinite loop ,with random length between min
+  and max tweet length.
   We don't want to block the main thread, so we use a ExecutorService --> SingleThreadExecutor to simulate the twitter stream.
   submit() method is used to run the tweet simulation in a separate thread implementing Functional Interface Runnable.
  */
@@ -123,11 +124,12 @@ public class MockKafkaStreamRunner implements StreamRunner {
     private void simulateTwitterStream(String[] keywords, int minTweetLength, int maxTweetLength, long sleepTimeMs) {
         // () -> { code to run }  ->  Lambda expression implementing Runnable interface
         Executors.newSingleThreadExecutor().submit(() ->
-        {
+         {
             // Lambda expression to run the tweet simulation in a separate thread implementing Runnable
             try {
                 log.info("Thread {} started for simulating twitter stream", Thread.currentThread().getName());
-                while (true) {
+                while (true)
+                {
                     // Generate a random tweet with the given keywords and length
                     // The tweet will be formatted as a JSON string with the (current date, tweet_id, tweet content ,user_id)
                     String formattedTweetAsRawJson = getFormattedTweet(keywords, minTweetLength, maxTweetLength);

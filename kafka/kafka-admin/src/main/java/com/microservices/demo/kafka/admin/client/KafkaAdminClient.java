@@ -79,22 +79,22 @@ public class KafkaAdminClient {
     public void createTopics() {
         CreateTopicsResult createTopicsResult;
         try {
-    /**
-        1. The retryTemplate.execute(..) method is HOF , which takes a "RetryCallback as an argument."
-                @Override
-                public final <T, E extends Throwable> T execute(RetryCallback<T, E> retryCallback)
-                {
-                  ...
-                }
+       /**
 
-        2. The RetryCallback is a functional interface which has a single method doWithRetry(RetryContext context)
+           1. The retryTemplate.execute(....) method is a HOF , it takes an interface RetryCallback as an argument."
+                   @Override
+                   public final <T, E extends Throwable> T execute(RetryCallback<T, E> retryCallback)
+                   {
+                       ...
+                   }
 
-                public interface RetryCallback<T, E extends Throwable>
-                {
-                   T doWithRetry(RetryContext context) throws E;
-                }
+           2. The RetryCallback is a functional interface which has a single method doWithRetry(RetryContext context)
+                   public interface RetryCallback<T, E extends Throwable>
+                   {
+                      T doWithRetry(RetryContext context) throws E;
+                   }
 
-        Option 1 -
+         Option 1 -
            Legacy Way :- Using annonymous class implementation of the RetryCallback interface which is the argument to
            the retryTemplate.execute(...) method .
              */
@@ -107,11 +107,16 @@ public class KafkaAdminClient {
                 }
               });
 
+
             /**
-             ⚖️ Option 2 - Using the Lambda Function
-                 The lambda function (ctx -> doCreateTopics(ctx)) is implementation of  doWithRetry(RetryContext)
-                 method of the Functional interface RetryCallback interface.
-              */
+             ️ Option 2 - Using the Lambda Function
+             💥💥💥
+             1. retryTemplate.execute(... ) method takes the Functional interface RetryCallback as input argument .
+             2. This functional interface RetryCallback defines doWithRetry(RetryContext) method .
+             3. The lambda function (ctx -> doCreateTopics(ctx)) is implementation of  doWithRetry(RetryContext) method of
+                 the Functionan interface RetryCallback  interface
+             */
+
             createTopicsResult = retryTemplate.execute(ctx -> doCreateTopics(ctx));
 
             // Using method reference to the doCreateTopics method
@@ -139,44 +144,46 @@ public class KafkaAdminClient {
         for (String topicToBeCreated : kafkaConfigData.getTopicNamesToCreate())
         {
             // Check if the topic is created, if not then retry until the topic is created or max retry is exhausted
-            while (!isTopicCreated(kafkaTopicsCreatedInCluster, topicToBeCreated))
+            while (!isTopicCreated1(kafkaTopicsCreatedInCluster, topicToBeCreated))
             {
                 log.info("topic is not created yet .. maxRetry so far {} ...  " , maxRetry);
                 checkMaxRetry(retryCount++, maxRetry);
-                sleep(sleepTimeMs);
+                delayMs(sleepTimeMs);
                 sleepTimeMs *= multiplier;
                 kafkaTopicsCreatedInCluster = getTopics();
             }
         }
     }
 
-   /**
-     Check if SchemaRegistry is up with RetryOption , make a REST call to the SchemaRegistry URL defined
-     in the configuration file to check if the SchemaRegistry is up. If the REST call fails,
-     then retry until the max retry is exhausted.
-    */
+    public boolean isTopicCreated1(String topicName , Collection<TopicListing> topicsInCluster)
+    {
+        if (topicsInCluster == null) return false;
+        return topicsInCluster.stream().anyMatch(topic ->
+        {
+          return topic.name().equals(topicName);
+     });
+    }
+
+
     public void checkSchemaRegistry() {
         int retryCount = 1;
         Integer maxRetry = retryConfigData.getMaxAttempts();
         int multiplier = retryConfigData.getMultiplier().intValue();
         Long sleepTimeMs = retryConfigData.getSleepTimeMs();
-        /**
-           get the HttpStatusCode from the REST call to the SchemaRegistry URL to check if the SchemaRegistry is up.
-           If the REST call fails, then retry until the max retry is exhausted.
-           This is invoked before creating the topic, because the topic creation will fail if the SchemaRegistry is not up.
-            So, we need to check if the SchemaRegistry is up before creating the topic.
-          */
 
-        while (!getSchemaRegistryStatus().is2xxSuccessful()) {
-            // Check if the retry is exhausted
+        while (!getSchemaRegistryStatusCode().is2xxSuccessful())
+        {
+            // Check if the retry is exhausted, break the while loop if exhausted
             checkMaxRetry(retryCount++, maxRetry);
-            sleep(sleepTimeMs);
+            delayMs(sleepTimeMs);
+            // increase the sleep time exponentially with muliplier
             sleepTimeMs *= multiplier;
         }
     }
 
     /**
-      Make a REST call to the SchemaRegistry URL defined in the configuration file to check if the SchemaRegistry is up.
+      Make a REST call to the SchemaRegistry URL defined in the configuration file to check if the SchemaRegistry
+       is up.
       If the REST call fails, then return SERVICE_UNAVAILABLE status.
      */
   private HttpStatusCode getSchemaRegistryStatus() {
@@ -186,13 +193,21 @@ public class KafkaAdminClient {
                   .uri(kafkaConfigData.getSchemaRegistryUrl())
                   .exchangeToMono(response -> Mono.just(response.statusCode()))
                   .block();
-      } catch (Exception e) {
+      } catch (Exception e)
+      {
           return HttpStatus.SERVICE_UNAVAILABLE;
       }
   }
 
+  private HttpStatusCode getSchemaRegistryStatusCode(){
+      return webClient.method(HttpMethod.GET)
+              .uri(kafkaConfigData.getSchemaRegistryUrl())
+              // from the client responsee get the status code
+              .exchangeToMono(clientResponse -> Mono.just(clientResponse.statusCode()))
+              .block();
+  }
 
-    private void sleep(Long sleepTimeMs) {
+    private void delayMs(Long sleepTimeMs) {
         try {
             Thread.sleep(sleepTimeMs);
         } catch (InterruptedException e) {
@@ -236,21 +251,20 @@ public class KafkaAdminClient {
       });
     }
 
-    public List<NewTopic> createNewTopic()
-    {
-        List<String> topicToBeCreated = kafkaConfigData.getTopicNamesToCreate();
-        List<NewTopic> newkafkaTopic = topicToBeCreated.stream()
+    public List<NewTopic> createTopicsFromConfig(){
+        return kafkaConfigData.getTopicNamesToCreate()
+                .stream()
                 .map(topic -> {
-                    return new NewTopic(topic.trim(), kafkaConfigData.getNumOfPartitions(),
-                                       kafkaConfigData.getReplicationFactor());
-                }).collect(Collectors.toList());
-        return newkafkaTopic;
-
+                    return new NewTopic(topic.trim(),kafkaConfigData.getNumOfPartitions(),
+                            kafkaConfigData.getReplicationFactor());
+                })
+                .collect(Collectors.toList());
     }
+
 
     private CreateTopicsResult doCreateTopics(RetryContext retryContext)
             throws ExecutionException, InterruptedException {
-        List<String> topicToBeCreated = kafkaConfigData.getTopicNamesToCreate();
+           List<String> topicToBeCreated = kafkaConfigData.getTopicNamesToCreate();
 
         topicToBeCreated.forEach(topic -> {
             log.info("Creating topic {}", topic);
@@ -261,7 +275,7 @@ public class KafkaAdminClient {
                                      .map(topic ->
                                       {
                                        return new NewTopic(topic.trim(), kafkaConfigData.getNumOfPartitions(),
-                                                              kafkaConfigData.getReplicationFactor());
+                                                           kafkaConfigData.getReplicationFactor());
                                       }).collect(Collectors.toList());
 
       /*
@@ -306,14 +320,20 @@ public class KafkaAdminClient {
     private Collection<TopicListing> getTopics() {
         Collection<TopicListing> topics;
         try {
-            // Check the topics created
-            // Option 1
-            retryTemplate.execute(new RetryCallback<Object, Throwable>() {
+            /**
+             Option 1 - Using Annonymous class :-
+                 a.We implement RetryCallback interface which is the argument to the retryTemplate.execute(...) method .
+                 b.The RetryCallback interface defines SAM doWithRetry() which is overriden
+              */
+
+            retryTemplate.execute(new RetryCallback<Object, Throwable>()
+             {
                 @Override
                 public Object doWithRetry(RetryContext retryContext) throws Exception {
                     return doGetTopics(retryContext);
                 }
             });
+            // Option 2 - Using Lambda to implement the  RetryCallback interface  SAM method doWithRetry()
             topics = retryTemplate.execute(ctx ->doGetTopics(ctx));
             topics = retryTemplate.execute(this::doGetTopics);
         }

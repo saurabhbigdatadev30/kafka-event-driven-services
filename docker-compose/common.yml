@@ -1,5 +1,11 @@
 version: '3.7'
-
+# Containers will be connected to this common network , and they can communicate with each other using their
+# service names as hostnames. Else a default network will be created for each docker-compose file and containers in
+# different docker-compose files won't be able to communicate with each other using service names as hostnames.
+# This means that if we have multiple docker-compose files (e.g. one for Kafka cluster, one for Keycloak server,
+# and one for the microservices) and we want the containers in these different compose files to communicate with
+# each other using service names as hostnames, we need to define a common network and connect all the services to
+# that network.
 networks:
   application:
     driver: bridge
