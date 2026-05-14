@@ -2,7 +2,8 @@ server:
   port: 8182
 
 kafka-config:
-  # hostName and port of Kafka broker from the docker-compose file
+  # Defined in docker-compose file for each broker ,
+  # Can be accessed from outside the container using localhost:port
   bootstrap-servers: localhost:19092, localhost:29092, localhost:39092
   schema-registry-url-key: schema.registry.url
   # Defined in docker-compose file

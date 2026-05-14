@@ -33,7 +33,8 @@ public class KafkaAdminConfig {
          The AdminClient is configured with the bootstrap servers from KafkaConfigData.
      */
     @Bean
-    public AdminClient adminClient() {
+    public AdminClient adminClient()
+    {
         return AdminClient.create(Map.of(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG,
                 kafkaConfigData.getBootstrapServers()));
     }

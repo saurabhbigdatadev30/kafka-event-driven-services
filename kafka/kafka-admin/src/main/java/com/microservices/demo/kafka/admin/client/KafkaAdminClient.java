@@ -95,14 +95,15 @@ public class KafkaAdminClient {
                    }
 
          Option 1 -
-           Legacy Way :- Using annonymous class implementation of the RetryCallback interface which is the argument to
-           the retryTemplate.execute(...) method .
+            Legacy Way :- Using annonymous class implementation of the RetryCallback interface which is the argument to
+                          the retryTemplate.execute(...) method .
              */
 
             retryTemplate.execute(new RetryCallback()
               {
                 @Override
-                public CreateTopicsResult doWithRetry(RetryContext retryContext) throws Exception {
+                public CreateTopicsResult doWithRetry(RetryContext retryContext) throws Exception
+                {
                     return doCreateTopics(retryContext);
                 }
               });
@@ -119,7 +120,7 @@ public class KafkaAdminClient {
 
             createTopicsResult = retryTemplate.execute(ctx -> doCreateTopics(ctx));
 
-            // Using method reference to the doCreateTopics method
+            // Using method reference to the doCreateTopics method , replace the lambda
             createTopicsResult = retryTemplate.execute(this::doCreateTopics);
             log.info("Create topic result {}", createTopicsResult.values().values());
         }
