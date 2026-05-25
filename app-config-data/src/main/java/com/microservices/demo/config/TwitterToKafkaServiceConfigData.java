@@ -44,8 +44,11 @@ public class TwitterToKafkaServiceConfigData {
     private Integer mockMaxTweetLength;    // mock-max-tweet-length [mockMaxTweetLength]
     private String twitterV2BaseUrl;       // twitter-v2-base-url [twitterV2BaseUrl]
     private String twitterV2RulesBaseUrl;  // twitter-v2-rules-base-url [twitterV2RulesBaseUrl]
+    private String twitterV2RulesEndPoint; // twitter-v2-rules-endpoint  Contains the old url
     // Reads from Environment Variable
-    private String twitterV2BearerToken;     //   maps with  => twitter-v2-bearer-token [twitterV2BearerToken]
+    private String twitterV2BearerToken;   //   maps with  => twitter-v2-bearer-token [twitterV2BearerToken]
+
+
 }
 
 // twitter-v2-rules-base-url: https://api.twitter.com/2/tweets/search/stream/rules

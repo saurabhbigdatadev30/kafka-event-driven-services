@@ -14,13 +14,15 @@ import org.springframework.stereotype.Service;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 @Service
-public class TwitterKafkaProducer implements KafkaProducer<Long, TwitterAvroModel> {
+public class TwitterKafkaProducer implements KafkaProducer<Long, TwitterAvroModel>
+{
 
     private static final Logger LOG = LoggerFactory.getLogger(TwitterKafkaProducer.class);
 
     private KafkaTemplate<Long, TwitterAvroModel> kafkaTemplate;
 
-    public TwitterKafkaProducer(KafkaTemplate<Long, TwitterAvroModel> template) {
+    public TwitterKafkaProducer(KafkaTemplate<Long, TwitterAvroModel> template)
+    {
         this.kafkaTemplate = template;
     }
 
@@ -28,15 +30,11 @@ public class TwitterKafkaProducer implements KafkaProducer<Long, TwitterAvroMode
     public void send(String topicName, Long key, TwitterAvroModel message) {
         LOG.info("Sending message='{}' to topic='{}'", message, topicName);
 
-       /**
-          (key,value) -> (userId , TwitterAvroModel)
-           key is the userId of the tweet, and message is the TwitterAvroModel, so send the message to same partition for the same userId
-        */
-
+       // 👉 Generics ensures that K should be type of [Serializable] & V should be type of [SpecificRecordBase]
         CompletableFuture<SendResult<Long, TwitterAvroModel>> futureResult = kafkaTemplate.send(topicName, key, message);
+      // 👉 whenComplete(...) is a HOF
         futureResult.whenComplete(getTwitterCallback(topicName, message));
     }
-
 
     @PreDestroy
     public void close() {
@@ -48,7 +46,8 @@ public class TwitterKafkaProducer implements KafkaProducer<Long, TwitterAvroMode
 
     private BiConsumer<SendResult<Long, TwitterAvroModel>, Throwable> getTwitterCallback(String topicName, TwitterAvroModel message)
     {
-        return (result, ex) -> {
+        return (result, ex) ->
+        {
             if (ex == null) {
                 LOG.info("message sent successfully to topic {} with key {} and value {}", topicName, message.getUserId(), message);
                 RecordMetadata metadata = result.getRecordMetadata();

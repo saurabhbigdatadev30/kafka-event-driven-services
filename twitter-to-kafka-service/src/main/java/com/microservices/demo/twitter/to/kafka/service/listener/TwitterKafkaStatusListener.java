@@ -16,9 +16,11 @@ import twitter4j.StatusAdapter;
 public class TwitterKafkaStatusListener extends StatusAdapter {
     // Dependencies: app-config-data module    ->  To read the topic name where the message to be published.
      private final KafkaConfigData kafkaConfigData;
+
    // Dependencies:  kafka-producer module     ->  To send the message to Kafka topic ,  KafkaProducer<Long,TwitterAvroModel>.
      private final KafkaProducer<Long, TwitterAvroModel> kafkaProducer;
 
+   // Dependencies: twitter-to-kafka-service module -> To transform the TwitterStatusObject to TwitterAvroModel
      private final TwitterStatusToAvroTransformer twitterStatusToAvroTransformer;
 
     /*
@@ -40,12 +42,11 @@ public class TwitterKafkaStatusListener extends StatusAdapter {
         1.This method is called when a new status is received from Twitter.
         2.It transforms the status object into an Avro model and publishes it to a Kafka topic.
         3.So this module has dependency to KafkaProducer and KafkaModel modules
-           @param status The status received from Twitter.
      */
     @Override
     public void onStatus(Status status) {
 
-        // status will contain the filtered tweet messages
+        // status will contain the filtered tweet messages based on the rules
         // LOG.info("Received status text {} publishing  to kafka topic {}", status.getText(), kafkaConfigData.getTopicName());
         log.info("Received status text {} publishing  to kafka topic {}", status.getText(), kafkaConfigData.getTopicName());
         // Construct the AvroModel from the status object...The AvroModel is generated using the Avro schema

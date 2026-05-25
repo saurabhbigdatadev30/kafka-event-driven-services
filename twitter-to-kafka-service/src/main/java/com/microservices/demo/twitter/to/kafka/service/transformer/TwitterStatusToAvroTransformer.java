@@ -8,7 +8,8 @@ import twitter4j.Status;
 public class TwitterStatusToAvroTransformer {
 
     // This class is responsible for transforming Twitter Status objects into Avro models.
-    public TwitterAvroModel getTwitterAvroModelFromStatus(Status status) {
+    public TwitterAvroModel getTwitterAvroModelFromStatus(Status status)
+    {
         return TwitterAvroModel
                 .newBuilder()
                 .setId(status.getId())

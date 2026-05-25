@@ -1,5 +1,6 @@
 package com.microservices.demo.twitter.to.kafka.service.runner.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -22,13 +23,15 @@ import java.util.*;
  * Sample code to demonstrate the use of the Filtered Stream endpoint
   https://github.com/xdevplatform/samples/blob/main/java/streams/FilteredStreamDemo.java
  * */
+@Slf4j
 public class FilteredStreamDemo {
     // To set your enviornment variables in your terminal run the following line:
     // export 'BEARER_TOKEN'='<your_bearer_token>'
 
     public static void main(String args[]) throws IOException, URISyntaxException {
         String bearerToken = System.getenv("BEARER_TOKEN");
-        if (null != bearerToken) {
+        if (null != bearerToken)
+        {
             Map<String, String> rules = new HashMap<>();
             rules.put("cats has:images", "cat images");
             rules.put("dogs has:images", "dog images");
@@ -39,10 +42,12 @@ public class FilteredStreamDemo {
         }
     }
 
-    /*
-     * This method calls the filtered stream endpoint and streams Tweets from it
-     * */
-    private static void connectStream(String bearerToken) throws IOException, URISyntaxException {
+    /**
+     This method calls the filtered stream endpoint and streams Tweets from it
+     */
+    private static void connectStream(String bearerToken) throws IOException, URISyntaxException
+    {
+
       // 1. Create a HttpClient Object.
         HttpClient httpClient = HttpClients.custom()
                 .setDefaultRequestConfig(RequestConfig.custom()
@@ -50,6 +55,7 @@ public class FilteredStreamDemo {
                 .build();
 
         URIBuilder uriBuilder = new URIBuilder("https://api.x.com/2/tweets/search/stream");
+
       // 2. Create a HttpGet request with the URI and set the Authorization header with the Bearer Token.
         HttpGet httpGet = new HttpGet(uriBuilder.build());
         httpGet.setHeader("Authorization", String.format("Bearer %s", bearerToken));
@@ -57,17 +63,17 @@ public class FilteredStreamDemo {
         // 3. Execute the request and get the response. The response will be a stream of Tweets that match the rules you set up.
         HttpResponse response = httpClient.execute(httpGet);
         HttpEntity entity = response.getEntity();
-        if (null != entity) {
+        if (null != entity)
+        {
             BufferedReader reader = new BufferedReader(new InputStreamReader((entity.getContent())));
             String line = reader.readLine();
             while (line != null) {
-                System.out.println(line);
+               log.info(String.format("The Streamed Tweet: response %s", line));
                 line = reader.readLine();
             }
         }
 
     }
-
 
     private static void setupRules(String bearerToken, Map<String, String> rules)
             throws IOException, URISyntaxException {
@@ -78,22 +84,29 @@ public class FilteredStreamDemo {
         createRules(bearerToken, rules);
     }
 
-
     private static void createRules(String bearerToken, Map<String, String> rules)
             throws URISyntaxException, IOException
     {
+        // 1.  Build HttpClient Object
         HttpClient httpClient = HttpClients.custom()
                  .setDefaultRequestConfig(RequestConfig.custom()
                  .setCookieSpec(CookieSpecs.STANDARD).build())
                  .build();
 
         URIBuilder uriBuilder = new URIBuilder("https://api.x.com/2/tweets/search/stream/rules");
+
+           /**
+         2. Build HttpPost Request with the URI and set the Authorization header with the Bearer Token and
+            content-type header to application/json, to get the JSON Response
+          */
         HttpPost httpPost = new HttpPost(uriBuilder.build());
         httpPost.setHeader("Authorization", String.format("Bearer %s", bearerToken));
         httpPost.setHeader("content-type", "application/json");
         StringEntity body = new StringEntity(getFormattedString("{\"add\": [%s]}", rules));
         httpPost.setEntity(body);
         HttpResponse response = httpClient.execute(httpPost);
+
+
         HttpEntity entity = response.getEntity();
         if (null != entity) {
             System.out.println(EntityUtils.toString(entity, "UTF-8"));

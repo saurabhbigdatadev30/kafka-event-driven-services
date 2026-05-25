@@ -80,8 +80,8 @@ public class KafkaAdminClient {
         CreateTopicsResult createTopicsResult;
         try {
        /**
+        1. The retryTemplate.execute(....) method is a HOF , it takes an interface RetryCallback as an argument."
 
-           1. The retryTemplate.execute(....) method is a HOF , it takes an interface RetryCallback as an argument."
                    @Override
                    public final <T, E extends Throwable> T execute(RetryCallback<T, E> retryCallback)
                    {
@@ -113,9 +113,9 @@ public class KafkaAdminClient {
              ️ Option 2 - Using the Lambda Function
              💥💥💥
              1. retryTemplate.execute(... ) method takes the Functional interface RetryCallback as input argument .
-             2. This functional interface RetryCallback defines doWithRetry(RetryContext) method .
-             3. The lambda function (ctx -> doCreateTopics(ctx)) is implementation of  doWithRetry(RetryContext) method of
-                 the Functionan interface RetryCallback  interface
+             2. This functional interface RetryCallback defines SAM - doWithRetry(RetryContext) method .
+             3. The lambda function (ctx -> doCreateTopics(ctx)) is implementation of  doWithRetry(RetryContext) method
+                 of the Functionan interface RetryCallback  interface
              */
 
             createTopicsResult = retryTemplate.execute(ctx -> doCreateTopics(ctx));
@@ -262,6 +262,12 @@ public class KafkaAdminClient {
                 .collect(Collectors.toList());
     }
 
+    /**
+     👉  Signature of the doCreateTopics method is same as the signature of the doWithRetry() method of the
+         RetryCallback interface.
+
+     👉  so we can directly use the method reference to this method in the retryTemplate.execute(...) method.
+     */
 
     private CreateTopicsResult doCreateTopics(RetryContext retryContext)
             throws ExecutionException, InterruptedException {

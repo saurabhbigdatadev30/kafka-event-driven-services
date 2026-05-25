@@ -41,12 +41,14 @@
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
     </appender>
 
+    <!-- Setting package to log  -->
     <logger name="com.microservices.demo" level="info" additivity="false">
         <appender-ref ref="FILE"/>
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="STASH"/>
     </logger>
 
+    <!-- Setting log level to info for all the appenders  -->
     <root level="info">
         <appender-ref ref="FILE"/>
         <appender-ref ref="STDOUT"/>
