@@ -50,7 +50,8 @@ public class TwitterV2KafkaStreamRunner implements StreamRunner {
         String bearerToken = twitterToKafkaServiceConfigData.getTwitterV2BearerToken();
         if (null != bearerToken) {
             try {
-                twitterV2StreamHelper.setupRulesModified(bearerToken, () -> getRules());
+                // 👉👉 invoking the HOF , that takes lambda expression as input  argument () -> rulesToBeCreated()
+                twitterV2StreamHelper.setupRulesModified1(bearerToken, () -> rulesToBeCreated());
                 twitterV2StreamHelper.connectStream(bearerToken);
             } catch (IOException | URISyntaxException | JSONException e) {
                 LOG.error("Error streaming tweets in V2 API!", e);
@@ -74,6 +75,13 @@ public class TwitterV2KafkaStreamRunner implements StreamRunner {
         ));
         LOG.info("Created filter for twitter stream for keywords {}", keywords.toArray());
         return rulesMap;
+    }
+
+
+    private Map<String,String>rulesToBeCreated(){
+        List<String> rulesConfig = twitterToKafkaServiceConfigData.getTwitterKeywords();
+        return rulesConfig.stream().collect(Collectors.toMap
+                (rule -> rule,  rule -> "Keyword:: " + rule));
     }
 
 

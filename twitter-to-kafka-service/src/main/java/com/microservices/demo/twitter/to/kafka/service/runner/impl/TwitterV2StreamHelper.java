@@ -1,10 +1,8 @@
 package com.microservices.demo.twitter.to.kafka.service.runner.impl;
 
 import com.microservices.demo.config.TwitterToKafkaServiceConfigData;
-import com.microservices.demo.twitter.to.kafka.service.config.TwitterHttpClientConfig;
 import com.microservices.demo.twitter.to.kafka.service.exception.TwitterToKafkaServiceException;
 import com.microservices.demo.twitter.to.kafka.service.listener.TwitterKafkaStatusListener;
-import com.microservices.demo.twitter.to.kafka.service.response.TwitterRulesResponse;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -109,28 +107,21 @@ public class TwitterV2StreamHelper
         HttpResponse response = twitterHttpClient.execute(httpGet);
         HttpEntity entity = response.getEntity();
 
-        if (null != entity) {
-            /**
-               1. We use BufferedReader to read the stream of tweets from the Twitter V2 API from (HttpEntity.getEntity()).
-               2. Each line in the stream represents a tweet in JSON format.
-               3. This will be continues stream of tweets , which we will be parsing (JSON) & will send to Kafka.
-             */
+        if (null != entity)
+        {
+          /**
+             👉 entity.getContent() returns the raw **InputStream** of the HTTP response body — which is a **continuous,
+                 live stream of tweet data** coming from Twitter's V2 API.
+             👉  We use BufferedReader to read the stream of tweets from the Twitter V2 API from (HttpEntity.getEntity()).
+          */
             BufferedReader reader = new BufferedReader(new InputStreamReader(entity.getContent(), StandardCharsets.UTF_8));
-            String line = reader.readLine();
+            String line ;
           // Continues Streaming tweets until the stream is closed or an error occurs. Each line represents a tweet in JSON format.
-            while (line != null) {
-                line = reader.readLine();
+            while ((line = reader.readLine()) != null)
+            {
                 if (line != null && !line.isEmpty()) {
                     try {
-                 /**
-                   The getFormattedTweet(...) is invoked in the continues while loop . If :-
-                      1.The getFormattedTweet(...) method throws exceptions if the  tweet data is malformed , missing
-                        expected fields , parsing error.
-                      2.We catch those exceptions here and log them, the record is skipped .
-                      3.So that the stream continues to process subsequent tweets in getFormattedTweet(...) method .
-                  */
                         String tweet = getFormattedTweet(line);                    // step 1
-                        if (tweet == null) continue; //  skips step 2 and step 3
                         Status status = TwitterObjectFactory.createStatus(tweet);  // step 2
                         twitterKafkaStatusListener.onStatus(status);               // step 3
                     } catch (TwitterToKafkaServiceException e) {
@@ -146,33 +137,19 @@ public class TwitterV2StreamHelper
         }
     }
 
-       /**
-          1. Helper method to setup rules before streaming data
-       */
-    void setupRules(String bearerToken, Map<String, String> rules) throws IOException, URISyntaxException {
-        // Fetch existing rules from Twitter V2 API & delete the existing rules if any
-        List<String> existingRulesConfigured = fetchRulesJsonHandleNull(bearerToken).orElse(Collections.emptyList());
-        List<String> existingRules =  getRulesDynamicJson(bearerToken);
-        if (existingRules.size() > 0) {
-            deleteRules(bearerToken, existingRules);
-        }
-
-        // Refactor the above
-    fetchRulesJsonHandleNull(bearerToken).ifPresentOrElse(
-    returnedRules -> {
-                             try {
-                                  deleteRules(bearerToken, returnedRules);   // ✅ checked ex handled
-                                 } catch (IOException | URISyntaxException e) {
-                                     throw new RuntimeException("Failed to delete rules", e);
-                                 }
-                                },
-        () -> LOG.info("No Rules to be deleted")
-       );
-
-        // Create rules by passing the rules from the config file to the rules endpoint
-        createRules(bearerToken, rules);
-        LOG.info("Created rules for twitter stream {}", rules.keySet().toArray());
+    void handleOptionalUnderstandingDemo(String bearerToken) throws URISyntaxException, IOException {
+        fetchRulesJsonHandleNull(bearerToken).ifPresentOrElse(
+                // argument 1 consumer , takes List<String> as input argument and returns void
+                rulesLst -> {
+                   // ToDO - delete the rules returned
+                  }
+                ,
+                // argument -2 Takes the runnable
+                () -> LOG.info("")
+        );
     }
+
+
 
 
     private void createRules(String bearerToken, Map<String, String> rules) throws URISyntaxException, IOException {
@@ -207,50 +184,11 @@ public class TwitterV2StreamHelper
         }
     }
 
-    // TODo Remove this code , not following coding Practice , the List<String> may be null
-    private List<String> getRules(String bearerToken) throws URISyntaxException, IOException {
-        List<String> rules = new ArrayList<>();
 
-        // [1] Build HttpClient Object . This HttpClient will be used to send HttpGet request to the Twitter V2 API
-            /* HttpClient httpClient = HttpClients.custom()
-                     .setDefaultRequestConfig(RequestConfig.custom()
-                     .setCookieSpec(CookieSpecs.STANDARD).build())
-                     .build();*/
-
-        // [2] Build URIBuilder Object, reading the twitter-v2-rules-base-url from configuration twitter-v2-rules-base-url
-        URIBuilder uriBuilder = new URIBuilder(twitterToKafkaServiceConfigData.getTwitterV2RulesBaseUrl());
-        URIBuilder uriBuilderOld = new  URIBuilder(twitterToKafkaServiceConfigData.getTwitterV2RulesEndPoint());
-
-        // [3] Build a HttpGet request [HttpGet] Object , passing the uriBuilder.  Set Bearer Token in the Header[Authorization] of HttpGet
-        HttpGet httpGet = new HttpGet(uriBuilder.build());
-        httpGet.setHeader("Authorization", String.format("Bearer %s", bearerToken));
-        httpGet.setHeader("content-type", "application/json");
-
-        // [4] Using the HttpClient, send the HttpGet request to the Twitter V2 API Rules endpoint
-        HttpResponse response = twitterHttpClient.execute(httpGet);
-
-        // [5] Get the response entity from the HttpResponse . We get the rules of Twitter -V2 API in the response entity
-        HttpEntity entity = response.getEntity();
-        if (null != entity) {
-            // [6] Get the entity content as a String . Build JSONObject from HttpEntity
-            JSONObject json = new JSONObject(EntityUtils.toString(entity, "UTF-8"));
-            // We will then check if the JSON object has "data" key
-            if (json.length() > 1 && json.has("data")) {
-                /**
-                 [8] If the JSONObject has "data" key, then extract the rules from the JSONObject in JSONArray .
-                    The "data" key contains an array of rules, we will extract the "id" from each rule and add it to the list of rules.
-                 */
-                JSONArray array = (JSONArray) json.get("data");
-                for (int i = 0; i < array.length(); i++) {
-                    // [9]  The "data" key contains an array of rules, we will extract the "id
-                    JSONObject jsonObject = (JSONObject) array.get(i);
-                    // [10] We fetch the "id" from each rule and add it to the list of rules
-                    rules.add(jsonObject.getString("id"));
-                }
-            }
-        }
-        return rules;
-    }
+    /** Understanding Optional usage:-
+        The return type List may be empty , if the rules endpoint returns empty response or if the "data" key is missing in the response.
+        Hence, we use Optional to handle the case where there are   no rules returned from the API.
+     */
 
     public Optional<List<String> > fetchRulesJsonHandleNull(String bearerToken) throws URISyntaxException, IOException {
         List<String> rulesLst = new ArrayList<>();
@@ -258,9 +196,12 @@ public class TwitterV2StreamHelper
         HttpGet httpGet = new HttpGet(uriBuilder.build());
         httpGet.setHeader("Authorization", String.format("Bearer %s", bearerToken));
         httpGet.setHeader("content-type", "application/json");
+
+        /* Rules V2 Endpoint returns the existing rules in the response body in JSON format.*/
         HttpResponse httpResponse = twitterHttpClient.execute(httpGet);
         HttpEntity httpEntity = httpResponse.getEntity();
 
+        /* We will parse the JSON response to extract the rule IDs.*/
         JSONObject rulesJson = new JSONObject(EntityUtils.toString(httpEntity),"UTF-8");
         if(rulesJson.has("data"))
         {
@@ -274,6 +215,10 @@ public class TwitterV2StreamHelper
         return Optional.of(rulesLst);
     }
 
+    /**
+       Instead of JSONObject, we use JSONNode tree structure to parse the JSON response from the rules endpoint.
+      This allows us to navigate the JSON response safely without worrying about missing keys or type mismatches.
+    */
     public List<String> getRulesDynamicJson(String bearerToken) throws URISyntaxException, IOException {
         List<String> rulesLst = new ArrayList<>();
         URIBuilder uriBuilder = new URIBuilder(twitterToKafkaServiceConfigData.getTwitterV2RulesBaseUrl());
@@ -362,7 +307,7 @@ public class TwitterV2StreamHelper
         }
     }
 
-// Called in endless while() loop context
+// Called from the  endless while() loop context
    private String getFormattedTweet(String tweetData)
    {
        // [1] Null / Empty check on raw input
@@ -370,33 +315,25 @@ public class TwitterV2StreamHelper
            throw new TwitterToKafkaServiceException("Cannot format tweet — raw tweet data is null or empty");
        }
 
-// ToDo - Add validation logic to check  raw tweet data contains expected fields (created_at, id, text, author_id) before parsing
-
-       // [2] Build 💥💥 JSONObject from the raw tweets [tweetData] string.
+       // 👉👉 [2] Build JSONObject from the raw tweets [tweetData] string.
        JSONObject tweetJsonObject = new JSONObject(tweetData);
 
        // [3] Check — "data" key missing → throw domain exception
        if (!tweetJsonObject.has("data")) {
            throw new TwitterToKafkaServiceException(String.format("Tweet %s is not valid", tweetData));
        }
+       // TODO - Add validation logic
 
        // [4] Safe extraction — only reached if "data" key exists
        JSONObject jsonData = (JSONObject) tweetJsonObject.get("data");
 
-       // Build the tweet params as array in the expected order [created_at, id, text, author_id] for formatting the tweet JSON compatible with Twitter4J's Status object
-       String[] tweetParams = new String[]{
-               ZonedDateTime.parse(jsonData.get("created_at").toString())
-                       .withZoneSameInstant(ZoneId.of("UTC"))
-                       .format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH)),
-               jsonData.get("id").toString(),
-               jsonData.get("text").toString().replaceAll("\"", "\\\\\""),
-               jsonData.get("author_id").toString(),
-       };
-       return formatTweetAsJsonWithParams(tweetParams);
+       // Fetch the JSON fields from the tweet response , parsing the JSONObject
+       String[] tweetParameters =  extractJsonData(jsonData);
+       return formatTweetAsJsonWithParams(tweetParameters);
    }
 
     /*
-    String tweetData :
+    String jsonData :
      {
          "created_at": "Mon Apr 08 12:34:56 UTC 2024",
          "id": "1234567890",  // Tweet_ID
@@ -405,6 +342,33 @@ public class TwitterV2StreamHelper
              "id": "9876543210"  // Author_ID
        }
      */
+
+    // Extract / parse the JSON Fields from the JSONObject , key = "data"
+  private String[] extractJsonData(JSONObject jsonData){
+      try {
+          String[] tweetParams = new String[] {
+         /* 👉👉 Field -1 "created_at"extracted from the JSON response and formatting it to match Twitter4J's
+                           expected date format*/
+          ZonedDateTime.parse(jsonData.get("created_at").toString())
+                  .withZoneSameInstant(ZoneId.of("UTC"))
+                  .format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH)),
+
+           jsonData.get("id").toString(),
+           jsonData.get("text").toString().replaceAll("\"", "\\\\\""),
+
+         /**  This is a 👉 nested object , we need to navigate to the "author" object using jsonData.getJSONObject("author")  ,
+              then extract the "id" field and extract the "id" field from it.
+          */
+           jsonData.getJSONObject("author").get("id").toString()
+          };
+          return tweetParams;
+      } catch (JSONException e) {
+          throw new TwitterToKafkaServiceException(String.format("Tweet %s is not valid", jsonData));
+      }
+  }
+
+
+
     private String getFormattedTweetJSONParser(String rawTweetV2API) {
         try {
 
@@ -440,22 +404,23 @@ public class TwitterV2StreamHelper
         return tweet;
     }
 
-    /**
-    This method is Higher Order Function , it takes Supplier<> as input argument which is a functional interface
-     that represents a supplier of results. It has a single abstract method get() which returns a result of type T.
-     */
-      void setupRulesModified(String bearerToken, Supplier<Map<String, String>> rulesSupplier)
-            throws IOException, URISyntaxException {
 
-        Map<String, String> rules = rulesSupplier.get();
-        // Fetch existing rules from Twitter V2 API & delete the existing rules if any
-        List<String> existingRules = getRulesDynamicJson(bearerToken);
-        if (existingRules.size() > 0) {
-            deleteRules(bearerToken, existingRules);
-        }
-        // Create rules by passing the rules from the config file to the rules endpoint
-        createRules(bearerToken, rules);
-    }
 
+    public void setupRulesModified1(String bearerToken , Supplier<Map<String,String>>getRulesMap)
+            throws URISyntaxException , IOException
+    {
+     fetchRulesJsonHandleNull(bearerToken).ifPresentOrElse(
+             rulesLst -> {
+                 try {
+                     deleteRules(bearerToken, rulesLst);
+                 } catch (URISyntaxException  | IOException e) {
+                     throw new TwitterToKafkaServiceException("Failed to delete rules", e);
+                 }
+             }
+             ,
+             () -> LOG.error("No Rules found to delete")
+     );
+     createRules(bearerToken, getRulesMap.get());
+}
 
 }

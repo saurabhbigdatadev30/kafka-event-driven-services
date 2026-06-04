@@ -29,7 +29,6 @@ public class TwitterKafkaProducer implements KafkaProducer<Long, TwitterAvroMode
   @Override
     public void send(String topicName, Long key, TwitterAvroModel message) {
         LOG.info("Sending message='{}' to topic='{}'", message, topicName);
-
        // 👉 Generics ensures that K should be type of [Serializable] & V should be type of [SpecificRecordBase]
         CompletableFuture<SendResult<Long, TwitterAvroModel>> futureResult = kafkaTemplate.send(topicName, key, message);
       // 👉 whenComplete(...) is a HOF
@@ -44,7 +43,8 @@ public class TwitterKafkaProducer implements KafkaProducer<Long, TwitterAvroMode
         }
     }
 
-    private BiConsumer<SendResult<Long, TwitterAvroModel>, Throwable> getTwitterCallback(String topicName, TwitterAvroModel message)
+    private BiConsumer<SendResult<Long, TwitterAvroModel>, Throwable> getTwitterCallback(String topicName,
+                                                                                         TwitterAvroModel message)
     {
         return (result, ex) ->
         {
