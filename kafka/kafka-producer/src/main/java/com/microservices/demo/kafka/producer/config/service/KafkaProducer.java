@@ -5,17 +5,16 @@ import org.apache.avro.specific.SpecificRecordBase;
 import java.io.Serializable;
 
 /**
- 1. The KafkaProducer interface defines a contract for sending messages to a Kafka topic.
+ 1. The KafkaProducer interface defines a contract for (type of the key , value) for sending messages to a Kafka topic.
+       <K extends Serializable, V extends SpecificRecordBase>
 
- 2.  The send method takes the (topic name, key, and message) as parameters and is responsible for sending the message
-      to the specified Kafka topic.
-
- 3.  The generic type ensures that the key is serialized for transmission, and the value is compatible with Avro serialization,
- which is commonly used in Kafka messaging.
+ 2. The generic type ensures that any class that implements the KafkaProducer
+     - key is serialized for transmission,
+     - value is compatible with Avro serialization, which is commonly used in Kafka messaging.
  */
 
 public interface KafkaProducer<K extends Serializable, V extends SpecificRecordBase>
 {
-    // Ensures that K is Serializable & V is subtype of SpecificRecordBase
+    // THe Generics Ensures that K is Serializable & V is subtype of SpecificRecordBase
     void send(String topicName, K key, V message);
 }

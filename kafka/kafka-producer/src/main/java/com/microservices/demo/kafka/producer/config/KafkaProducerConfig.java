@@ -31,8 +31,8 @@ public class KafkaProducerConfig<K extends Serializable, V extends SpecificRecor
     }
 
     /**
-      We create @Bean that returns a Map<String, Object> which contains the configuration properties for the Kafka producer.
-      These properties are used to configure the ProducerFactory and KafkaTemplate beans.
+        We create @Bean that returns a Map<String, Object> which contains the configuration properties for the Kafka producer.
+        These properties are used to configure the ProducerFactory and KafkaTemplate beans.
       */
     @Bean
     public Map<String, Object> producerConfig() {

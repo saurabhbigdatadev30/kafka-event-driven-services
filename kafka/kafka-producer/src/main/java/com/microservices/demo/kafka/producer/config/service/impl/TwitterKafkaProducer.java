@@ -16,7 +16,6 @@ import java.util.function.BiConsumer;
 @Service
 public class TwitterKafkaProducer implements KafkaProducer<Long, TwitterAvroModel>
 {
-
     private static final Logger LOG = LoggerFactory.getLogger(TwitterKafkaProducer.class);
 
     private KafkaTemplate<Long, TwitterAvroModel> kafkaTemplate;
@@ -27,12 +26,12 @@ public class TwitterKafkaProducer implements KafkaProducer<Long, TwitterAvroMode
     }
 
   @Override
-    public void send(String topicName, Long key, TwitterAvroModel message) {
-        LOG.info("Sending message='{}' to topic='{}'", message, topicName);
+    public void send(String topicName, Long key, TwitterAvroModel twitterModel) {
+        LOG.info("Sending message='{}' to topic='{}'", twitterModel, topicName);
        // 👉 Generics ensures that K should be type of [Serializable] & V should be type of [SpecificRecordBase]
-        CompletableFuture<SendResult<Long, TwitterAvroModel>> futureResult = kafkaTemplate.send(topicName, key, message);
-      // 👉 whenComplete(...) is a HOF
-        futureResult.whenComplete(getTwitterCallback(topicName, message));
+        CompletableFuture<SendResult<Long, TwitterAvroModel>> futureResult = kafkaTemplate
+                .send(topicName, key, twitterModel);
+        futureResult.whenComplete(publishTwitterCallback(topicName, twitterModel));
     }
 
     @PreDestroy
@@ -43,8 +42,8 @@ public class TwitterKafkaProducer implements KafkaProducer<Long, TwitterAvroMode
         }
     }
 
-    private BiConsumer<SendResult<Long, TwitterAvroModel>, Throwable> getTwitterCallback(String topicName,
-                                                                                         TwitterAvroModel message)
+    private BiConsumer<SendResult<Long, TwitterAvroModel>, Throwable> publishTwitterCallback(String topicName,
+                                                                                             TwitterAvroModel message)
     {
         return (result, ex) ->
         {

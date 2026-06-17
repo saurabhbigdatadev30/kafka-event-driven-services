@@ -14,10 +14,10 @@ import twitter4j.StatusAdapter;
 @Component
 
 public class TwitterKafkaStatusListener extends StatusAdapter {
-    // Dependencies: app-config-data module    ->  To read the topic name where the message to be published.
+    // Add Dependency : app-config-data module    ->  To read the topic name where the message to be published.
      private final KafkaConfigData kafkaConfigData;
 
-   // Dependencies:  kafka-producer module     ->  To send the message to Kafka topic ,  KafkaProducer<Long,TwitterAvroModel>.
+   // Add Dependency :  kafka-producer module     ->  To send the message to Kafka topic ,  KafkaProducer<Long,TwitterAvroModel>.
      private final KafkaProducer<Long, TwitterAvroModel> kafkaProducer;
 
    // Dependencies: twitter-to-kafka-service module -> To transform the TwitterStatusObject to TwitterAvroModel

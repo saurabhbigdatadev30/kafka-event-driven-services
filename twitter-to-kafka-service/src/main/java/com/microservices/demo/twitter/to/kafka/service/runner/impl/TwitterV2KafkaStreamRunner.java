@@ -23,8 +23,8 @@ import java.util.stream.Collectors;
 // https://github.com/twitterdev/Twitter-API-v2-sample-code/blob/main/Filtered-Stream/FilteredStreamDemo.java
 
 /*
-  This class implements the StreamRunner interface and is responsible for starting the Twitter V2 stream & will be getting
-  loaded only if the enable-v2-tweets = true & enable-mock-tweets = false
+   This class implements the StreamRunner interface and is responsible for starting the Twitter V2 stream & will be
+   getting loaded only if the enable-v2-tweets = true & enable-mock-tweets = false
  */
 @Component
 @ConditionalOnExpression("${twitter-to-kafka-service.enable-v2-tweets} && not ${twitter-to-kafka-service.enable-mock-tweets}")
@@ -50,7 +50,12 @@ public class TwitterV2KafkaStreamRunner implements StreamRunner {
         String bearerToken = twitterToKafkaServiceConfigData.getTwitterV2BearerToken();
         if (null != bearerToken) {
             try {
-                // 👉👉 invoking the HOF , that takes lambda expression as input  argument () -> rulesToBeCreated()
+                 /**
+                     The method setupRulesModified1 method is responsible for setting up the rules for filtering the tweets based
+                     on the keywords specified in the configuration.
+                     👉  setupRulesModified1 is HOF , it takes lambda expression as input argument () -> rulesToBeCreated()
+                     👉 *** This lambda expression implements the @Functional interface <Supplier></Supplier> ***
+                  */
                 twitterV2StreamHelper.setupRulesModified1(bearerToken, () -> rulesToBeCreated());
                 twitterV2StreamHelper.connectStream(bearerToken);
             } catch (IOException | URISyntaxException | JSONException e) {
@@ -80,8 +85,10 @@ public class TwitterV2KafkaStreamRunner implements StreamRunner {
 
     private Map<String,String>rulesToBeCreated(){
         List<String> rulesConfig = twitterToKafkaServiceConfigData.getTwitterKeywords();
-        return rulesConfig.stream().collect(Collectors.toMap
-                (rule -> rule,  rule -> "Keyword:: " + rule));
+        return rulesConfig
+                .stream()
+                .collect(Collectors.toMap(rule -> rule,  rule -> "Keyword:: " + rule));
+
     }
 
 
