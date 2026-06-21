@@ -361,7 +361,7 @@ public class TwitterV2StreamHelper
 
        // Fetch the JSON fields from the tweet response , parsing the JSONObject
        String[] tweetParameters =  extractJsonData(jsonData);
-       return formatTweetAsJsonWithParams(tweetParameters);
+        return formatTweetAsJsonWithParams(tweetParameters);
    }
 
     /*
