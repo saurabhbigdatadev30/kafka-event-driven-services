@@ -47,7 +47,6 @@ public class FilteredStreamDemo {
      */
     private static void connectStream(String bearerToken) throws IOException, URISyntaxException
     {
-
       // 1. Create a HttpClient Object.
         HttpClient httpClient = HttpClients.custom()
                 .setDefaultRequestConfig(RequestConfig.custom()
