@@ -15,6 +15,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -36,6 +37,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @Component
@@ -170,6 +172,56 @@ public class TwitterV2StreamHelper
 
                }
 
+    private void createRulesUsingOptionalRefactoredHOF(String bearerToken , Map<String, String> rulesToBeCreated)
+            throws URISyntaxException, IOException
+    {
+        fetchRulesJsonHandleNull(bearerToken).ifPresentOrElse(
+                deleteExistingRulesV2APIHOF(bearerToken)   // ← ✅✅ this returns a Consumer<List<String>>
+                ,
+                () -> LOG.error("No Rules found to delete")
+        );
+        createRules(bearerToken, rulesToBeCreated);
+
+    }
+
+    /**
+     --------------   HOF --------------------
+
+     1. The deleteExistingRulesV2APIHOF(...) is HOF , since it returns a @FunctionalInterface Consumer.
+
+     2. The deleteExistingRulesV2APIHOF which returns @FunctionalInterface Consumer, takes List<String>
+        as input argument.
+
+     3. So, the argument List<String> belongs to the returned @Functional Interface Consumer and not of
+        the method deleteExistingRulesV2API().
+
+     4. The String bearerToken is closure.
+
+     5. The HOF must be Invoked as :-
+
+        ✅✅✅  deleteExistingRulesV2APIHOF(bearerToken).accpet(rulesList)
+
+        ✅✅ `ifPresentOrElse()` internally calls deleteExistingRulesV2APIHOF(bearerToken).accpet(rulesList)
+               when the Optional is non-empty
+
+          We never call .accept() yourself because we are passing the Consumer as a callback.
+          The contract of ifPresentOrElse() is: "I will call accept() on whatever Consumer you give me,
+           if the Optional has a value."
+
+     */
+
+     Consumer<List<String>> deleteExistingRulesV2APIHOF(String bearerToken)
+     {
+        return rulesList -> {
+            try {
+                deleteRules(bearerToken, rulesList);
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        };
+    }
 
 
     private void createRules(String bearerToken, Map<String, String> rules)
