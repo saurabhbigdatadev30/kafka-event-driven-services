@@ -43,18 +43,20 @@ import java.util.function.Supplier;
 @Component
 
 /**
- This class is responsible for connecting to the Twitter V2 API and streaming tweets that match the rules we set up.
+  This class is responsible for connecting to the Twitter V2 API and streaming tweets that match the rules we set up.
   https://github.com/xdevplatform/samples/blob/main/java/streams/FilteredStreamDemo.java
 
- The StreamRunner Interface has 3 different implementations . Based on @ConditionalOnExpression annotation,
- the respective implementation & the respective Helper class will be loaded at runtime based on the configuration properties
- defined iconfig-client-twitter_to_kafka.yml file.
+   The StreamRunner Interface has 3 different implementations . Based on @ConditionalOnExpression annotation,
+   the respective implementation & the respective Helper class will be loaded at runtime based on the configuration properties
+   defined iconfig-client-twitter_to_kafka.yml file.
 
-twitter-to-kafka-service:
- enable-v2-tweets: true
- enable-mock-tweets: false
+ twitter-to-kafka-service:
+   enable-v2-tweets: true
+   enable-mock-tweets: false
 
- So based on the above properties, the V2 implementation & the respective helper class  will be loaded at runtime.
+ @ConditionalOnExpression("${twitter-to-kafka-service.enable-v2-tweets} && not ${twitter-to-kafka-service.enable-mock-tweets}")
+ So based on the above properties, the V2 implementation  i.e (TwitterV2KafkaStreamRunner implements StreamRunner)
+ & the respective helper class (TwitterV2StreamHelper) will be loaded at runtime.
  */
 
 @ConditionalOnExpression("${twitter-to-kafka-service.enable-v2-tweets} && not ${twitter-to-kafka-service.enable-mock-tweets}")
@@ -64,12 +66,12 @@ public class TwitterV2StreamHelper
     private static final Logger LOG = LoggerFactory.getLogger(TwitterV2StreamHelper.class);
 
     // dependency : app-config-data module
-    private final TwitterToKafkaServiceConfigData twitterToKafkaServiceConfigData;
+     private final TwitterToKafkaServiceConfigData twitterToKafkaServiceConfigData;
 
-    private final TwitterKafkaStatusListener twitterKafkaStatusListener;
+     private final TwitterKafkaStatusListener twitterKafkaStatusListener;
 
    // @Bean [CloseableHttpClient] is created in @Confifuration class TwitterHttpClientConfig
-    private final CloseableHttpClient twitterHttpClient;
+     private final CloseableHttpClient twitterHttpClient;
 
     // directly from the JSON string to a JsonNode tree structure
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -152,7 +154,7 @@ public class TwitterV2StreamHelper
      )
      */
 
-    private void createRulesUsingOptionalDemo(String bearerToken , Map<String, String> rulesToBeCreated)
+    private void createRulesUsingOptional(String bearerToken , Map<String, String> rulesToBeCreated)
                        throws URISyntaxException, IOException
                {
                    fetchRulesJsonHandleNull(bearerToken).ifPresentOrElse(
@@ -172,56 +174,8 @@ public class TwitterV2StreamHelper
 
                }
 
-    private void createRulesUsingOptionalRefactoredHOF(String bearerToken , Map<String, String> rulesToBeCreated)
-            throws URISyntaxException, IOException
-    {
-        fetchRulesJsonHandleNull(bearerToken).ifPresentOrElse(
-                deleteExistingRulesV2APIHOF(bearerToken)   // ← ✅✅ this returns a Consumer<List<String>>
-                ,
-                () -> LOG.error("No Rules found to delete")
-        );
-        createRules(bearerToken, rulesToBeCreated);
 
-    }
 
-    /**
-     --------------   HOF --------------------
-
-     1. The deleteExistingRulesV2APIHOF(...) is HOF , since it returns a @FunctionalInterface Consumer.
-
-     2. The deleteExistingRulesV2APIHOF which returns @FunctionalInterface Consumer, takes List<String>
-        as input argument.
-
-     3. So, the argument List<String> belongs to the returned @Functional Interface Consumer and not of
-        the method deleteExistingRulesV2API().
-
-     4. The String bearerToken is closure.
-
-     5. The HOF must be Invoked as :-
-
-        ✅✅✅  deleteExistingRulesV2APIHOF(bearerToken).accpet(rulesList)
-
-        ✅✅ `ifPresentOrElse()` internally calls deleteExistingRulesV2APIHOF(bearerToken).accpet(rulesList)
-               when the Optional is non-empty
-
-          We never call .accept() yourself because we are passing the Consumer as a callback.
-          The contract of ifPresentOrElse() is: "I will call accept() on whatever Consumer you give me,
-           if the Optional has a value."
-
-     */
-
-     Consumer<List<String>> deleteExistingRulesV2APIHOF(String bearerToken)
-     {
-        return rulesList -> {
-            try {
-                deleteRules(bearerToken, rulesList);
-            } catch (URISyntaxException e) {
-                throw new RuntimeException(e);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        };
-    }
 
 
     private void createRules(String bearerToken, Map<String, String> rules)
@@ -278,6 +232,7 @@ public class TwitterV2StreamHelper
         HttpResponse httpResponse = twitterHttpClient.execute(httpGet);
         HttpEntity httpEntity = httpResponse.getEntity();
         if (null != httpEntity) {
+
         /**
            1. Create a JSONObject, to store the HttpResponse body.
            2. The response body is a JSON string, so we convert it to a JSONObject using the EntityUtils.toString() method
@@ -294,14 +249,15 @@ public class TwitterV2StreamHelper
             }
         };
         }
-        return Optional.of(rulesList)	;
+        return rulesList.isEmpty() ? Optional.empty() : Optional.of(rulesList);
     }
 
     /**
        Instead of JSONObject, we use JSONNode tree structure to parse the JSON response from the rules endpoint.
       This allows us to navigate the JSON response safely without worrying about missing keys or type mismatches.
     */
-    public List<String> getRulesDynamicJson(String bearerToken) throws URISyntaxException, IOException {
+    public List<String> getRulesDynamicJson(String bearerToken)
+            throws URISyntaxException, IOException {
         List<String> rulesLst = new ArrayList<>();
         URIBuilder uriBuilder = new URIBuilder(twitterToKafkaServiceConfigData.getTwitterV2RulesBaseUrl());
         HttpGet httpGet = new HttpGet(uriBuilder.build());
@@ -490,17 +446,19 @@ public class TwitterV2StreamHelper
 
     /**
          1. The method setupRulesModified1() is HOF , since it takes @Functional interface Supplier as input argument.
-         2. This follows Open and Closed Principle, since we can pass different implementations of the
+
+         2. This follows *** Open and Closed Principle *** , since we can pass different implementations of the
             supplier interface.
-             ***  Invoking the HOF ,
-             *** passing the lambda expression () -> rulesToBeCreated() as input argument to the
-             ***  method setupRulesModified1() ***
-             twitterV2StreamHelper.setupRulesModified1(bearerToken , () -> rulesToBeCreated());
+
+         3. Invoking the HOF ,
+            - passing  lambda expression () -> rulesToBeCreated() as input argument to the method setupRulesModified1()
+               twitterV2StreamHelper.setupRulesModified1(bearerToken , () -> rulesToBeCreated());
      */
 
     public void setupRulesModified1(String bearerToken , Supplier<Map<String,String>>getRulesMap)
-            throws URISyntaxException , IOException
-    {
+      throws URISyntaxException , IOException
+     {
+    // Remote call to the V2 API to fetch the existing configured rules & delete them .
      fetchRulesJsonHandleNull(bearerToken).ifPresentOrElse(
              rulesLst -> {
                  try {
@@ -513,7 +471,48 @@ public class TwitterV2StreamHelper
              () -> LOG.error("No Rules found to delete")
      );
      // When the getRulesMap.get() is invoked, it executes the rulesToBeCreated() method
-     createRules(bearerToken, getRulesMap.get());
+        createRules(bearerToken, getRulesMap.get());
 }
+
+
+    public void setupRulesModified1RefactoredHOF(String bearerToken , Supplier<Map<String,String>>getRulesMap)
+            throws URISyntaxException, IOException
+    {
+        fetchRulesJsonHandleNull(bearerToken).ifPresentOrElse(
+                deleteExistingRulesV2APIHOF(bearerToken)   // ←  this returns a Consumer<List<String>>
+                ,
+                () -> LOG.error("No Rules found to delete")
+        );
+        createRules(bearerToken, getRulesMap.get());
+
+    }
+
+    /**
+    The HOF deleteExistingRulesV2APIHOF() is a HOF . This returns a Consumer<List<String>> . This is invoked by
+    a callback function in the ifPresentOrElse() method of Optional<List<String>>.
+
+       ✅   deleteExistingRulesV2APIHOF(bearerToken).accpet(rulesList) ***
+
+       ✅ `ifPresentOrElse()` internally calls deleteExistingRulesV2APIHOF(bearerToken).accpet(rulesList)
+            when the Optional is non-empty
+
+     We never call .accept() yourself because we are passing the Consumer as a callback.
+        The contract of ifPresentOrElse() is: "I will call accept() on whatever Consumer you give me,
+        if the Optional has a value."
+     */
+
+    Consumer<List<String>> deleteExistingRulesV2APIHOF(String bearerToken)
+    {
+        return rulesList -> {
+            try {
+                deleteRules(bearerToken, rulesList);
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        };
+    }
+
 
 }

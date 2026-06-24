@@ -57,6 +57,8 @@ public class TwitterV2KafkaStreamRunner implements StreamRunner {
                      👉 *** This lambda expression implements the @Functional interface <Supplier></Supplier> ***
                   */
                 twitterV2StreamHelper.setupRulesModified1(bearerToken, () -> rulesToBeCreated());
+                // THe setupRulesModified1RefactoredHOF is same as setupRulesModified1
+                twitterV2StreamHelper.setupRulesModified1RefactoredHOF(bearerToken, () -> rulesToBeCreated());
                 twitterV2StreamHelper.connectStream(bearerToken);
             } catch (IOException | URISyntaxException | JSONException e) {
                 LOG.error("Error streaming tweets in V2 API!", e);
@@ -87,7 +89,8 @@ public class TwitterV2KafkaStreamRunner implements StreamRunner {
         List<String> rulesConfig = twitterToKafkaServiceConfigData.getTwitterKeywords();
         return rulesConfig
                 .stream()
-                .collect(Collectors.toMap(rule -> rule,  rule -> "Keyword:: " + rule));
+                .collect(Collectors.toMap(rule -> rule,
+                        rule -> "Keyword:: " + rule));
 
     }
 

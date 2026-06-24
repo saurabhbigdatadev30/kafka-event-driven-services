@@ -43,7 +43,7 @@ public class TwitterToKafkaServiceApplication implements CommandLineRunner
     {
          log.info("App starts...>>>");
         // init method is responsible to create Kafka Topic
-        streamInitializer.init();
+         streamInitializer.init();
         /**
           We have 3 implementations of StreamRunner interface responsible to read the stream from Twitter & put into Kafka Topic
             1. Twitter 4J Library  , 2. Twitter V2 API  , 3.MockKafkaStreamRunner
